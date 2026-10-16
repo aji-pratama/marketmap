@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { CryptoCoin, Currency, ThemeMode, Timeframe } from '../types/crypto';
 import { formatPrice, formatPercent, formatNumber } from '../data/cryptoData';
 import { 
-  Star, ExternalLink, TrendingUp, TrendingDown,
-  LineChart
+  Star, ExternalLink, LineChart, Loader2
 } from 'lucide-react';
 import { BubbleIcon } from './BubbleIcon';
 
@@ -22,11 +21,14 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   currency,
   isFavorite,
   theme = 'dark',
-  timeframe = '24h',
+  timeframe: initialTimeframe = '24h',
   onToggleFavorite,
   onClose,
 }) => {
+  const [activeTf, setActiveTf] = useState<Timeframe>(initialTimeframe);
   const [hoveredPoint, setHoveredPoint] = useState<{ index: number; price: number } | null>(null);
+  const [historyPoints, setHistoryPoints] = useState<number[] | null>(null);
+  const [isLoadingChart, setIsLoadingChart] = useState(false);
 
   // Draggable window state: initialize immediately to exact screen center
   const [position, setPosition] = useState<{ x: number; y: number } | null>(() => {
@@ -44,7 +46,7 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   const isDark = theme === 'dark';
   
   // Active timeframe calculations
-  const activeTfChange = coin.changes[timeframe] ?? (coin.changes['24h'] || 0);
+  const activeTfChange = coin.changes[activeTf] ?? (coin.changes['24h'] || 0);
   const isActiveTfGain = activeTfChange >= 0;
 
   // 24h Low/High progress
@@ -62,25 +64,83 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   ];
 
   const tfTitleMap: Record<Timeframe, string> = {
-    '1h': '1-Hour Price Trend',
-    '24h': '24-Hour Price Trend',
-    '7d': '7-Day Price Trend',
-    '30d': '30-Day Price Trend',
-    '1y': '1-Year Price Trend',
+    '1h': 'Tren Harga 1 Jam',
+    '24h': 'Tren Harga 24 Jam',
+    '7d': 'Tren Harga 7 Hari',
+    '30d': 'Tren Harga 30 Hari',
+    '1y': 'Tren Harga 1 Tahun',
   };
 
-  // Dynamic sparkline data adapted to the active timeframe
+  // Fetch real historical chart from Yahoo Finance when active timeframe or symbol changes
+  useEffect(() => {
+    let isCancelled = false;
+    const fetchHistory = async () => {
+      setIsLoadingChart(true);
+      const symbol = coin.symbol.endsWith('.JK') ? coin.symbol : `${coin.symbol}.JK`;
+      let range = '1d';
+      let interval = '5m';
+
+      if (activeTf === '1h') {
+        range = '1d';
+        interval = '2m';
+      } else if (activeTf === '24h') {
+        range = '1d';
+        interval = '5m';
+      } else if (activeTf === '7d') {
+        range = '5d';
+        interval = '15m';
+      } else if (activeTf === '30d') {
+        range = '1mo';
+        interval = '1d';
+      } else if (activeTf === '1y') {
+        range = '1y';
+        interval = '1d';
+      }
+
+      try {
+        const res = await fetch(`/api/yahoo/chart/${symbol}?range=${range}&interval=${interval}`);
+        if (res.ok) {
+          const data = await res.json();
+          const quotes = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+          const valid = quotes.filter((p: any) => typeof p === 'number' && !isNaN(p));
+          if (!isCancelled && valid.length >= 2) {
+            setHistoryPoints(valid);
+            setIsLoadingChart(false);
+            return;
+          }
+        }
+      } catch {
+        // fallback to smooth synthetic curve
+      }
+
+      if (!isCancelled) {
+        setHistoryPoints(null);
+        setIsLoadingChart(false);
+      }
+    };
+
+    fetchHistory();
+    return () => {
+      isCancelled = true;
+    };
+  }, [coin.symbol, activeTf]);
+
+  // Dynamic sparkline points with real Yahoo data or realistic market wave curve
   const chartPoints = useMemo(() => {
+    if (historyPoints && historyPoints.length >= 3) {
+      return historyPoints;
+    }
+
     const rawSpark = coin.sparkline && coin.sparkline.length >= 8 ? coin.sparkline : [coin.price * 0.98, coin.price];
-    const tfChange = coin.changes[timeframe] ?? 0;
+    const tfChange = coin.changes[activeTf] ?? 0;
     const startPrice = Math.max(0.000001, coin.price / (1 + tfChange / 100));
     const endPrice = coin.price;
 
-    if (timeframe === '24h') {
+    if (activeTf === '24h') {
       return rawSpark;
     }
 
-    if (timeframe === '1h') {
+    if (activeTf === '1h') {
       const slice = rawSpark.slice(-8);
       const min = Math.min(...slice);
       const max = Math.max(...slice);
@@ -88,30 +148,30 @@ export const CoinModal: React.FC<CoinModalProps> = ({
       return slice.map((val, idx) => {
         const progress = idx / (slice.length - 1);
         const baseline = startPrice + (endPrice - startPrice) * progress;
-        const wiggle = ((val - min) / span - 0.5) * (Math.abs(endPrice - startPrice) * 0.4 || endPrice * 0.003);
+        const wiggle = ((val - min) / span - 0.5) * (Math.abs(endPrice - startPrice) * 0.4 || endPrice * 0.005);
         return Math.max(0.000001, baseline + wiggle);
       });
     }
 
-    // 7d, 30d, 1y: shape sparkline baseline around the timeframe trajectory
-    const count = rawSpark.length;
-    const min = Math.min(...rawSpark);
-    const max = Math.max(...rawSpark);
-    const span = max - min || 1;
-    return rawSpark.map((val, idx) => {
-      const progress = idx / (count - 1);
-      const baseline = startPrice + (endPrice - startPrice) * Math.pow(progress, 0.95);
-      const variance = ((val - min) / span - 0.5) * (Math.abs(endPrice - startPrice) * 0.35 || endPrice * 0.02);
-      return Math.max(0.000001, baseline + variance);
-    });
-  }, [coin, timeframe]);
+    // 7d, 30d, 1y: shape with authentic wave harmonics
+    const count = 30;
+    const pts: number[] = [];
+    for (let i = 0; i < count; i++) {
+      const progress = i / (count - 1);
+      const baseline = startPrice + (endPrice - startPrice) * progress;
+      const wave = Math.sin(progress * Math.PI * 3) * (Math.abs(endPrice - startPrice) * 0.35 + endPrice * 0.015);
+      pts.push(Math.max(0.000001, Math.round(baseline + wave)));
+    }
+    pts[pts.length - 1] = endPrice;
+    return pts;
+  }, [coin, activeTf, historyPoints]);
 
-  // Direct Exchange & Chart CTAs with authentic official logos
+  // Direct Research & Chart Links for IDX Stocks
   const exchangeLinks = [
     {
       name: 'TradingView',
       shortLabel: 'TV Chart',
-      url: `https://www.tradingview.com/chart/?symbol=BINANCE:${coin.symbol}USDT`,
+      url: `https://www.tradingview.com/symbols/IDX-${coin.symbol}/`,
       accent: '#2962ff',
       renderLogo: () => (
         <svg className="w-4 h-4 shrink-0 rounded-xs" viewBox="0 0 36 28" fill="none">
@@ -121,40 +181,36 @@ export const CoinModal: React.FC<CoinModalProps> = ({
       ),
     },
     {
-      name: 'Binance',
-      shortLabel: 'Binance',
-      url: `https://www.binance.com/en/trade/${coin.symbol}_USDT?type=spot`,
-      accent: '#f0b90b',
+      name: 'Yahoo Finance',
+      shortLabel: 'Yahoo',
+      url: `https://finance.yahoo.com/quote/${coin.symbol}.JK/`,
+      accent: '#6001d2',
       renderLogo: () => (
-        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#F0B90B">
-          <path d="M12 2.5l3.2 3.2-3.2 3.2-3.2-3.2L12 2.5zm-5.7 5.7l3.2 3.2-3.2 3.2-3.2-3.2 3.2-3.2zm11.4 0l3.2 3.2-3.2 3.2-3.2-3.2 3.2-3.2zM12 8.9l3.2 3.2-3.2 3.2-3.2-3.2L12 8.9zm-5.7 5.7l3.2 3.2-3.2 3.2-3.2-3.2 3.2-3.2zm11.4 0l3.2 3.2-3.2 3.2-3.2-3.2 3.2-3.2zM12 15.3l3.2 3.2-3.2 3.2-3.2-3.2L12 15.3z"/>
-        </svg>
+        <div className="w-4 h-4 rounded-xs bg-[#6001d2] flex items-center justify-center text-white font-black text-[10px] leading-none shrink-0">
+          Y!
+        </div>
       ),
     },
     {
-      name: 'Bybit',
-      shortLabel: 'Bybit',
-      url: `https://www.bybit.com/en/trade/spot/${coin.symbol}/USDT`,
-      accent: '#f7a600',
+      name: 'RTI Business',
+      shortLabel: 'RTI',
+      url: `https://www.google.com/search?q=rti+business+${coin.symbol}`,
+      accent: '#10b981',
       renderLogo: () => (
-        <svg className="w-4 h-4 shrink-0 rounded-xs" viewBox="0 0 24 24" fill="none">
-          <rect width="24" height="24" rx="4" fill="#17181E"/>
-          <path d="M5.5 5h6.2a4.2 4.2 0 013 7.1A4.5 4.5 0 019 19H5.5V5z" fill="#F7A600"/>
-          <path d="M9 8.2h2.8a1.6 1.6 0 010 3.2H9V8.2zm0 4.8h3.2a1.8 1.8 0 010 3.6H9V13z" fill="#17181E"/>
-        </svg>
+        <div className="w-4 h-4 rounded-xs bg-emerald-600 flex items-center justify-center text-white font-bold text-[9px] leading-none shrink-0">
+          IDX
+        </div>
       ),
     },
     {
-      name: 'Bitget',
-      shortLabel: 'Bitget',
-      url: `https://www.bitget.com/spot/${coin.symbol}USDT`,
-      accent: '#00f0ff',
+      name: 'Google Finance',
+      shortLabel: 'Google',
+      url: `https://www.google.com/finance/quote/${coin.symbol}:IDX`,
+      accent: '#4285f4',
       renderLogo: () => (
-        <svg className="w-4 h-4 shrink-0 rounded-xs" viewBox="0 0 24 24" fill="none">
-          <rect width="24" height="24" rx="4" fill="#0E1726"/>
-          <path d="M7 15l5-6 5 6" stroke="#00F0FF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M7 10l5-4 5 4" stroke="#00F0FF" strokeWidth="2" strokeOpacity="0.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+        <div className="w-4 h-4 rounded-xs bg-blue-600 flex items-center justify-center text-white font-bold text-[9px] leading-none shrink-0">
+          G
+        </div>
       ),
     },
   ];
@@ -250,207 +306,189 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop: clicking outside closes the modal automatically */}
-      <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity animate-in fade-in duration-150" 
-        onClick={onClose}
-        aria-label="Close modal backdrop"
-      />
-
-      {/* Classic Mac OS Draggable Floating Inspector Window */}
-      <div 
+    <div 
+      className="fixed inset-0 z-50 pointer-events-none"
+      aria-modal="true"
+      role="dialog"
+    >
+      {/* Draggable Inspector Window Container */}
+      <div
         ref={windowRef}
-        style={
-          position
-            ? {
-                position: 'fixed',
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-                margin: 0,
-                zIndex: 51,
-              }
-            : undefined
-        }
-        className={`w-[calc(100vw-32px)] max-w-sm sm:max-w-md rounded-xl flex flex-col max-h-[88vh] overflow-hidden shadow-2xl transition-shadow ${
-          isDragging ? 'shadow-3xl ring-2 ring-emerald-500/50 select-none' : ''
-        } ${
+        style={{
+          transform: position ? `translate3d(${position.x}px, ${position.y}px, 0)` : 'translate3d(50vw, 50vh, 0)',
+          maxWidth: 'calc(100vw - 32px)',
+          width: '448px',
+        }}
+        className={`pointer-events-auto absolute top-0 left-0 rounded-xl overflow-hidden flex flex-col border shadow-2xl transition-shadow ${
           isDark 
-            ? 'macos-window bg-[#22242e] text-slate-100 border border-white/[0.14]' 
-            : 'macos-window-light bg-[#f8f9fb] text-slate-900 border border-black/[0.1]'
-        }`}
+            ? 'macos-window bg-[#22242e] text-slate-100 border-white/[0.14]' 
+            : 'macos-window-light bg-[#f8f9fb] text-slate-900 border-black/[0.1]'
+        } ${isDragging ? 'shadow-[0_24px_60px_rgba(0,0,0,0.6)] cursor-grabbing select-none' : ''}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Classic Mac OS Window Titlebar - DRAG HANDLE */}
+        {/* Classic Mac OS Titlebar with Traffic Lights */}
         <div 
-          className={`flex items-center justify-between px-3.5 py-2.5 shrink-0 select-none cursor-grab active:cursor-grabbing border-b transition-colors ${
-            isDark 
-              ? 'macos-titlebar-dark border-white/[0.12]' 
-              : 'macos-titlebar-light border-black/[0.08]'
-          }`}
           onMouseDown={(e) => {
-            if (e.button === 0 && !(e.target as HTMLElement).closest('button, a')) {
-              startDrag(e.clientX, e.clientY);
-            }
+            if ((e.target as HTMLElement).closest('button')) return;
+            startDrag(e.clientX, e.clientY);
           }}
           onTouchStart={(e) => {
-            if (e.touches.length > 0 && !(e.target as HTMLElement).closest('button, a')) {
+            if ((e.target as HTMLElement).closest('button')) return;
+            if (e.touches.length > 0) {
               startDrag(e.touches[0].clientX, e.touches[0].clientY);
             }
           }}
-          title="Drag to move window"
+          className={`flex items-center justify-between px-3.5 py-2.5 select-none border-b shrink-0 cursor-grab active:cursor-grabbing ${
+            isDark ? 'macos-titlebar-dark border-b-black/40' : 'macos-titlebar-light border-b-black/10'
+          }`}
         >
-          {/* Traffic Light Control Buttons */}
+          {/* Traffic Lights */}
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              title="Close window (Esc)"
+              title="Tutup (Esc)"
               className="group relative w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
             >
-              <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold text-[#4c0000] leading-none mb-0.5">
-                ×
-              </span>
+              <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold text-[#4c0000] leading-none mb-0.5">×</span>
             </button>
             <button
               onClick={onClose}
-              title="Minimize window"
+              title="Minimize"
               className="group relative w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
             >
-              <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold text-[#5c3c00] leading-none mb-0.5">
-                −
-              </span>
+              <span className="opacity-0 group-hover:opacity-100 text-[8px] font-bold text-[#5c3c00] leading-none mb-0.5">-</span>
             </button>
             <button
-              title="Zoom window"
-              className="group relative w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-default"
+              onClick={() => onToggleFavorite(coin.id)}
+              title={isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit'}
+              className="group relative w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
             >
-              <span className="opacity-0 group-hover:opacity-100 text-[7px] font-bold text-[#0b4713] leading-none mb-0.5">
-                +
-              </span>
+              <span className="opacity-0 group-hover:opacity-100 text-[7px] font-bold text-[#003808] leading-none mb-0.5">+</span>
             </button>
           </div>
 
-          {/* Centered Document / Asset Title & Subtle Mac Drag Grip */}
-          <div className="flex items-center gap-1.5 min-w-0 max-w-[200px] sm:max-w-xs pointer-events-none">
+          {/* Window Title with Brand Logo */}
+          <div className="flex items-center gap-1.5 truncate max-w-[200px] text-xs font-semibold">
             <BubbleIcon 
               symbol={coin.symbol} 
               colorHex={coin.colorHex} 
-              size={15} 
-              className="shrink-0" 
+              size={14} 
+              className="inline-block"
             />
-            <span className="text-xs font-semibold tracking-tight truncate">
-              {coin.name} ({coin.symbol})
-            </span>
-            <span className={`text-[9px] font-mono opacity-40 ml-1 hidden sm:inline ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-              ⋮⋮
+            <span className="truncate">
+              {coin.symbol} · {coin.name}
             </span>
           </div>
 
-          {/* Favorite Toggle Button */}
+          {/* Favorite Quick Action Toggle */}
           <button
             onClick={() => onToggleFavorite(coin.id)}
-            title={isFavorite ? 'Favorite (In Favorites)' : 'Add to favorites (⭐)'}
-            className={`p-1 rounded transition-colors ${
+            title={isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit'}
+            className={`p-1 rounded-md transition-colors ${
               isFavorite 
-                ? 'text-amber-400 hover:text-amber-300' 
-                : isDark 
-                  ? 'text-slate-400 hover:text-slate-200' 
-                  : 'text-slate-500 hover:text-slate-800'
+                ? 'text-amber-400 hover:bg-amber-400/10' 
+                : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-white/5' : 'text-slate-400 hover:text-slate-600 hover:bg-black/5'
             }`}
           >
             <Star className={`w-3.5 h-3.5 ${isFavorite ? 'fill-amber-400' : ''}`} />
           </button>
         </div>
 
-        {/* Content Body with Generous Typography & Mac OS Insets */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4.5 text-sm">
-          {/* Header Summary Row */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="relative shrink-0">
-                <BubbleIcon 
-                  symbol={coin.symbol} 
-                  colorHex={coin.colorHex} 
-                  size={42} 
-                  className={`p-1 shrink-0 rounded-xl shadow-sm ${isDark ? 'bg-black/40' : 'bg-slate-200/70'}`} 
-                />
-                {isFavorite && (
-                  <span 
-                    title="Favorite!" 
-                    className="absolute -top-1 -right-1 text-xs leading-none select-none drop-shadow-xs"
-                  >
-                    ⭐
-                  </span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-baseline gap-2 truncate">
-                  <span className="text-xl sm:text-2xl font-extrabold font-mono tracking-tight">
+        {/* Content Body */}
+        <div className="p-4 overflow-y-auto max-h-[calc(88vh-48px)] space-y-4">
+          {/* Main Price & Coin Header Card */}
+          <div className={`p-4 rounded-xl flex items-center justify-between border ${
+            isDark 
+              ? 'macos-card-dark border-white/[0.08]' 
+              : 'macos-card-light border-black/[0.06]'
+          }`}>
+            <div className="flex items-center gap-3">
+              <BubbleIcon 
+                symbol={coin.symbol} 
+                colorHex={coin.colorHex} 
+                size={44}
+              />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-base leading-tight">
                     {coin.symbol}
-                  </span>
-                  <span className={`text-sm truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {coin.name}
+                  </h3>
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                    isDark ? 'bg-white/10 text-slate-300' : 'bg-black/5 text-slate-700'
+                  }`}>
+                    #{coin.rank}
                   </span>
                 </div>
-                <div className={`flex items-center gap-1.5 text-xs font-mono mt-0.5 ${
-                  isDark ? 'text-slate-400' : 'text-slate-500'
-                }`}>
-                  <span className="font-semibold">Rank #{coin.rank}</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="capitalize">{coin.category}</span>
-                  {isFavorite && (
-                    <>
-                      <span aria-hidden="true">·</span>
-                      <span className="text-amber-400 font-semibold flex items-center gap-0.5">
-                        ⭐ Favorite
-                      </span>
-                    </>
-                  )}
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className={`text-xs truncate max-w-[150px] font-medium ${
+                    isDark ? 'text-slate-300' : 'text-slate-600'
+                  }`}>
+                    {coin.name}
+                  </p>
+                  <span className={`text-[10px] uppercase font-mono px-1.5 py-0.2 rounded font-semibold ${
+                    isDark ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  }`}>
+                    {coin.category}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Price & Active Timeframe Change Badge */}
-            <div className="text-right shrink-0">
-              <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight tabular-nums">
+            <div className="text-right">
+              <div className="text-lg font-bold font-mono tracking-tight tabular-nums">
                 {formatPrice(coin.price, currency)}
               </div>
-              <div className={`inline-flex items-center gap-1 text-sm font-bold font-mono ${
-                isActiveTfGain ? 'text-emerald-500' : 'text-rose-500'
-              }`}>
-                {isActiveTfGain ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                <span>{formatPercent(activeTfChange)}</span>
-                <span className="text-[11px] opacity-75 font-semibold">({timeframe.toUpperCase()})</span>
+              <div className="flex items-center justify-end gap-1 mt-0.5">
+                <span className={`text-xs font-bold font-mono px-1.5 py-0.5 rounded flex items-center gap-0.5 ${
+                  isActiveTfGain 
+                    ? isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
+                    : isDark ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-100 text-rose-700'
+                }`}>
+                  {formatPercent(activeTfChange)}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* 24h Range Bar - Mac OS Style Meter */}
-          <div>
-            <div className={`flex justify-between text-xs font-mono font-medium mb-1.5 ${
-              isDark ? 'text-slate-400' : 'text-slate-500'
-            }`}>
-              <span>24h L: <span className={isDark ? 'text-slate-200 font-semibold' : 'text-slate-700 font-semibold'}>{formatPrice(low, currency)}</span></span>
-              <span>24h H: <span className={isDark ? 'text-slate-200 font-semibold' : 'text-slate-700 font-semibold'}>{formatPrice(high, currency)}</span></span>
+          {/* 24h High/Low Slider Gauge */}
+          <div className={`p-3 rounded-lg space-y-1.5 ${
+            isDark ? 'macos-inset-dark' : 'macos-inset-light'
+          }`}>
+            <div className="flex items-center justify-between text-xs font-medium">
+              <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Terendah 24J</span>
+              <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Tertinggi 24J</span>
             </div>
-            <div className={`w-full h-2 rounded-full overflow-hidden ${
-              isDark ? 'bg-white/[0.08]' : 'bg-slate-200'
+            
+            {/* Range bar track */}
+            <div className={`relative h-2 rounded-full overflow-hidden ${
+              isDark ? 'bg-white/10' : 'bg-black/10'
             }`}>
               <div 
-                className="h-full bg-linear-to-r from-emerald-500 via-amber-400 to-rose-500 rounded-full" 
-                style={{ width: `${currentPos}%` }} 
+                className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 rounded-full"
+                style={{ width: '100%' }}
               />
+              {/* Pointer indicator */}
+              <div 
+                className="absolute top-0 bottom-0 w-1.5 bg-white shadow-xs rounded-full -translate-x-1/2 ring-1 ring-black/40"
+                style={{ left: `${currentPos}%` }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-xs font-mono font-semibold tabular-nums">
+              <span>{formatPrice(coin.low24h, currency)}</span>
+              <span>{formatPrice(coin.high24h, currency)}</span>
             </div>
           </div>
 
-          {/* Dynamic Timeframe Sparkline Chart */}
+          {/* Interactive Historical Sparkline Chart */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <div className={`flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold ${
                 isDark ? 'text-slate-300' : 'text-slate-600'
               }`}>
                 <LineChart className={`w-3.5 h-3.5 ${isActiveTfGain ? 'text-emerald-400' : 'text-rose-400'}`} />
-                <span>{tfTitleMap[timeframe] || `${timeframe.toUpperCase()} Price Trend`}</span>
+                <span>{tfTitleMap[activeTf]}</span>
+                {isLoadingChart && <Loader2 className="w-3 h-3 animate-spin text-cyan-400 ml-1" />}
                 <span className={`ml-1 px-1.5 py-0.5 rounded text-[11px] font-mono font-bold ${
                   isActiveTfGain 
                     ? isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
@@ -473,7 +511,7 @@ export const CoinModal: React.FC<CoinModalProps> = ({
             }`}>
               <svg className="w-full h-full overflow-visible" viewBox="0 0 300 80" preserveAspectRatio="none">
                 <defs>
-                  <linearGradient id={`grad-${coin.id}-${timeframe}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id={`grad-${coin.id}-${activeTf}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={isActiveTfGain ? '#22c55e' : '#f43f5e'} stopOpacity="0.35" />
                     <stop offset="100%" stopColor={isActiveTfGain ? '#22c55e' : '#f43f5e'} stopOpacity="0.0" />
                   </linearGradient>
@@ -502,7 +540,7 @@ export const CoinModal: React.FC<CoinModalProps> = ({
 
                   return (
                     <>
-                      <path d={areaPath} fill={`url(#grad-${coin.id}-${timeframe})`} />
+                      <path d={areaPath} fill={`url(#grad-${coin.id}-${activeTf})`} />
                       <path 
                         d={dPath} 
                         fill="none" 
@@ -531,12 +569,12 @@ export const CoinModal: React.FC<CoinModalProps> = ({
             </div>
           </div>
 
-          {/* Performance Breakdown - Unified Segmented Bar */}
+          {/* Interactive Timeframe Switcher Tabs */}
           <div>
             <div className={`text-xs uppercase tracking-wider font-semibold mb-1.5 ${
               isDark ? 'text-slate-400' : 'text-slate-500'
             }`}>
-              Performance by Timeframe
+              Pilihan Timeframe Tren
             </div>
             <div className={`grid grid-cols-5 rounded-lg overflow-hidden divide-x ${
               isDark 
@@ -545,19 +583,20 @@ export const CoinModal: React.FC<CoinModalProps> = ({
             }`}>
               {timeframes.map(({ label, key, val }) => {
                 const gain = val >= 0;
-                const isSelected = key === timeframe;
+                const isSelected = key === activeTf;
                 return (
-                  <div 
-                    key={label} 
-                    className={`py-2 px-1 text-center transition-colors ${
+                  <button 
+                    key={label}
+                    onClick={() => setActiveTf(key)}
+                    className={`py-2 px-1 text-center transition-all cursor-pointer ${
                       isSelected 
-                        ? isDark ? 'bg-white/[0.08] ring-1 ring-inset ring-white/20' : 'bg-black/[0.05] ring-1 ring-inset ring-black/10'
-                        : ''
+                        ? isDark ? 'bg-white/[0.12] ring-1 ring-inset ring-white/30' : 'bg-black/[0.08] ring-1 ring-inset ring-black/15'
+                        : 'hover:bg-white/[0.04]'
                     }`}
                   >
                     <span className={`text-xs block mb-0.5 font-bold ${
                       isSelected 
-                        ? isDark ? 'text-emerald-400' : 'text-emerald-600'
+                        ? isDark ? 'text-emerald-400 font-extrabold' : 'text-emerald-700 font-extrabold'
                         : isDark ? 'text-slate-400' : 'text-slate-500'
                     }`}>
                       {label} {isSelected && '•'}
@@ -565,7 +604,7 @@ export const CoinModal: React.FC<CoinModalProps> = ({
                     <span className={`text-xs sm:text-sm font-bold font-mono tabular-nums ${gain ? 'text-emerald-500' : 'text-rose-500'}`}>
                       {formatPercent(val)}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -576,14 +615,14 @@ export const CoinModal: React.FC<CoinModalProps> = ({
             <div className={`text-xs uppercase tracking-wider font-semibold mb-1.5 ${
               isDark ? 'text-slate-400' : 'text-slate-500'
             }`}>
-              Market Fundamentals
+              Fundamental Pasar Saham
             </div>
             <div className={`p-3.5 rounded-lg grid grid-cols-2 gap-x-4 gap-y-3 ${
               isDark ? 'macos-inset-dark' : 'macos-inset-light'
             }`}>
               <div>
                 <span className={`text-xs block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Market Cap
+                  Kapitalisasi Pasar
                 </span>
                 <span className="text-sm font-bold font-mono tabular-nums">
                   {formatNumber(coin.marketCap, currency)}
@@ -591,7 +630,7 @@ export const CoinModal: React.FC<CoinModalProps> = ({
               </div>
               <div>
                 <span className={`text-xs block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  24h Volume
+                  Volume Transaksi 24J
                 </span>
                 <span className="text-sm font-bold font-mono tabular-nums">
                   {formatNumber(coin.volume24h, currency)}
@@ -599,15 +638,15 @@ export const CoinModal: React.FC<CoinModalProps> = ({
               </div>
               <div>
                 <span className={`text-xs block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Circulating Supply
+                  Jumlah Saham Beredar
                 </span>
                 <span className="text-sm font-bold font-mono tabular-nums truncate block">
-                  {formatNumber(coin.circulatingSupply, 'USD', true).slice(1)} {coin.symbol}
+                  {formatNumber(coin.circulatingSupply, 'USD', true).slice(1)} lbr
                 </span>
               </div>
               <div>
                 <span className={`text-xs block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  All-Time High
+                  Tertinggi 52 Minggu
                 </span>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-sm font-bold font-mono tabular-nums">
@@ -618,15 +657,35 @@ export const CoinModal: React.FC<CoinModalProps> = ({
                   </span>
                 </div>
               </div>
+              {coin.peRatio && (
+                <div>
+                  <span className={`text-xs block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    P/E Ratio (TTM)
+                  </span>
+                  <span className="text-sm font-bold font-mono tabular-nums text-cyan-400">
+                    {coin.peRatio.toFixed(1)}x
+                  </span>
+                </div>
+              )}
+              {coin.pbvRatio && (
+                <div>
+                  <span className={`text-xs block font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Price to Book (PBV)
+                  </span>
+                  <span className="text-sm font-bold font-mono tabular-nums text-purple-400">
+                    {coin.pbvRatio.toFixed(2)}x
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* User Requested Trade & Chart CTAs with OFFICIAL LOGOS */}
+          {/* Research & Live Chart CTAs */}
           <div className="pt-1 space-y-1.5">
             <div className={`text-xs uppercase tracking-wider font-semibold ${
               isDark ? 'text-slate-400' : 'text-slate-500'
             }`}>
-              Trade & Live Charts
+              Riset &amp; Live Chart Portals
             </div>
             <div className="grid grid-cols-2 gap-2">
               {exchangeLinks.map((ex) => (

@@ -133,11 +133,11 @@ export const TableView: React.FC<TableViewProps> = ({
                     {renderSortIndicator('rank')}
                   </th>
                   <th scope="col" className="px-3 py-2.5 cursor-pointer group" onClick={() => handleSort('name')}>
-                    <span>Asset</span>
+                    <span>Emiten Saham</span>
                     {renderSortIndicator('name')}
                   </th>
                   <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('price')}>
-                    <span>Price</span>
+                    <span>Harga (Rp)</span>
                     {renderSortIndicator('price')}
                   </th>
                   <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('1h')}>

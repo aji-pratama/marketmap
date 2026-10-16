@@ -96,18 +96,10 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   const rankRanges: { id: RankRange; label: string }[] = [
-    { id: 'favorites', label: `⭐ My Favorites (${favoriteCount})` },
-    { id: '1-100', label: 'Top 100' },
-    { id: '101-200', label: '101 - 200' },
-    { id: '201-300', label: '201 - 300' },
-    { id: '301-400', label: '301 - 400' },
-    { id: '401-500', label: '401 - 500' },
-    { id: '501-600', label: '501 - 600' },
-    { id: '601-700', label: '601 - 700' },
-    { id: '701-800', label: '701 - 800' },
-    { id: '801-900', label: '801 - 900' },
-    { id: '901-1000', label: '901 - 1000' },
-    { id: '1-1000', label: '🔥 Top 1000 (All)' },
+    { id: 'favorites', label: `⭐ Favorit Saya (${favoriteCount})` },
+    { id: '1-100', label: 'Top 100 Saham' },
+    { id: '101-200', label: 'Saham 101 - 200' },
+    { id: '1-1000', label: '🔥 Semua Saham (168)' },
   ];
 
   const activeRankLabel = rankRanges.find((r) => r.id === categoryFilter)?.label || 'Top 100';
@@ -178,8 +170,8 @@ export const Header: React.FC<HeaderProps> = ({
         <div className={`px-2 py-1 text-[10px] font-mono uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
           Currency
         </div>
-        <div className="grid grid-cols-5 gap-1.5 pt-1">
-          {(['USD', 'EUR', 'GBP', 'BTC', 'ETH'] as Currency[]).map((cur) => (
+        <div className="grid grid-cols-3 gap-1.5 pt-1">
+          {(['IDR', 'USD', 'EUR'] as Currency[]).map((cur) => (
             <button
               key={cur}
               onClick={() => onSelectCurrency(cur)}
@@ -353,7 +345,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`} />
             <input
               type="text"
-              placeholder="Spotlight asset (Esc)..."
+              placeholder="Cari emiten saham (Esc)..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               onKeyDown={(e) => {

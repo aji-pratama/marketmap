@@ -13,20 +13,20 @@ export const AffiliateBanner: React.FC = () => {
         <div className="flex items-center gap-2.5 overflow-hidden">
           <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
           <p className="text-xs text-white/80 truncate font-normal">
-            <span className="font-semibold text-white mr-1.5">Exchange Benefits:</span>
-            <span className="text-white/60 hidden sm:inline">20% fee discount & up to $30,000 bonus on Binance & Bybit</span>
-            <span className="text-white/60 sm:hidden">20% fee discount on Binance</span>
+            <span className="font-semibold text-white mr-1.5">IDX Saham Indonesia:</span>
+            <span className="text-white/60 hidden sm:inline">Data pasar bursa efek Indonesia via Yahoo Finance (10-15m delayed saat jam bursa)</span>
+            <span className="text-white/60 sm:hidden">Data IDX via Yahoo Finance</span>
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <a
-            href="https://accounts.binance.com/register?ref=BUBBLE20"
+            href="https://finance.yahoo.com/quote/%5EJKSE/"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all shadow-sm"
           >
-            <span>Claim</span>
+            <span>IHSG</span>
             <ArrowUpRight className="w-3 h-3" />
           </a>
           <button

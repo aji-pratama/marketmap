@@ -59,18 +59,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   ];
 
   const rankRanges: { id: RankRange; label: string }[] = [
-    { id: 'favorites', label: `⭐ My Favorites (${favoriteCount})` },
-    { id: '1-100', label: 'Top 100 Coins' },
-    { id: '1-1000', label: '🔥 All 1000 Coins' },
-    { id: '101-200', label: 'Rank 101 - 200' },
-    { id: '201-300', label: 'Rank 201 - 300' },
-    { id: '301-400', label: 'Rank 301 - 400' },
-    { id: '401-500', label: 'Rank 401 - 500' },
-    { id: '501-600', label: 'Rank 501 - 600' },
-    { id: '601-700', label: 'Rank 601 - 700' },
-    { id: '701-800', label: 'Rank 701 - 800' },
-    { id: '801-900', label: 'Rank 801 - 900' },
-    { id: '901-1000', label: 'Rank 901 - 1000' },
+    { id: 'favorites', label: `⭐ Favorit Saya (${favoriteCount})` },
+    { id: '1-100', label: 'Top 100 Saham' },
+    { id: '101-200', label: 'Saham 101 - 200' },
+    { id: '1-1000', label: '🔥 Semua Saham (168)' },
   ];
 
   const closeWindow = () => setActiveWindow(null);
@@ -240,7 +232,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
             <input
               type="text"
-              placeholder="Spotlight asset (e.g. BTC, ETH)..."
+              placeholder="Cari emiten saham (e.g. BBCA, BBRI)..."
               value={searchQuery}
               autoFocus
               onChange={(e) => onSearchChange(e.target.value)}

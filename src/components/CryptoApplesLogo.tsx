@@ -55,9 +55,9 @@ export const CryptoApplesLogo: React.FC<CryptoApplesLogoProps> = ({
           style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif' }}
           className="flex items-center text-sm sm:text-base font-semibold tracking-[-0.03em] leading-none select-none"
         >
-          <span className="text-white">Crypto</span>
+          <span className="text-white">Map</span>
           <span className="text-emerald-400 font-bold ml-0.5">
-            Apples
+            Saham
           </span>
         </div>
       )}

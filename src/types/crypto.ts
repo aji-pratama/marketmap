@@ -4,7 +4,7 @@ export type SizeByMetric = 'performance' | 'market_cap' | 'volume';
 
 export type ContentDisplay = 'performance' | 'price' | 'market_cap' | 'rank';
 
-export type Currency = 'USD' | 'EUR' | 'BTC' | 'ETH' | 'GBP';
+export type Currency = 'IDR' | 'USD' | 'EUR';
 
 export type RankRange = 
   | '1-1000'
@@ -28,12 +28,23 @@ export type ViewMode = 'bubbles' | 'apples' | 'table';
 
 export type ThemeMode = 'dark' | 'light';
 
+export type SahamCategory = 
+  | 'financials' 
+  | 'energy' 
+  | 'basic-materials' 
+  | 'consumer' 
+  | 'technology' 
+  | 'industrials' 
+  | 'properties' 
+  | 'healthcare' 
+  | 'infrastructure';
+
 export interface CryptoCoin {
   id: string;
   name: string;
   symbol: string;
   rank: number;
-  price: number; // in USD base
+  price: number; // in IDR base
   changes: {
     '1h': number;
     '24h': number;
@@ -41,8 +52,8 @@ export interface CryptoCoin {
     '30d': number;
     '1y': number;
   };
-  marketCap: number; // in USD
-  volume24h: number; // in USD
+  marketCap: number; // in IDR
+  volume24h: number; // in IDR
   high24h: number;
   low24h: number;
   circulatingSupply: number;
@@ -50,9 +61,21 @@ export interface CryptoCoin {
   ath: number;
   athChangePercentage: number;
   sparkline: number[];
-  category: 'layer1' | 'defi' | 'meme' | 'ai' | 'infra' | 'l2';
+  category: SahamCategory | string;
   colorHex?: string;
   iconUrl?: string;
+  peRatio?: number;
+  pbvRatio?: number;
+  dividendYield?: number;
+}
+
+export interface LivePriceUpdate {
+  symbol: string;
+  price: number;
+  change24h: number;
+  high24h?: number;
+  low24h?: number;
+  volume24h?: number;
 }
 
 export interface PhysicsSettings {

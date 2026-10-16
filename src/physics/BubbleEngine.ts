@@ -1663,7 +1663,7 @@ export class BubbleSimulation {
     // Add watermark
     tempCtx.font = '700 18px "Plus Jakarta Sans", sans-serif';
     tempCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    tempCtx.fillText(this.viewMode === 'apples' ? 'CryptoApples.net' : 'CryptoBubbles.net', 24, tempCanvas.height - 24);
+    tempCtx.fillText('MapSaham.com', 24, tempCanvas.height - 24);
 
     tempCtx.font = '500 13px "JetBrains Mono", monospace';
     tempCtx.fillStyle = 'rgba(255, 255, 255, 0.5)';

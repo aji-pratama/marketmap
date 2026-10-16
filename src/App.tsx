@@ -34,23 +34,23 @@ const DEFAULT_PHYSICS: PhysicsSettings = {
 export default function App() {
   const [coins, setCoins] = useState<CryptoCoin[]>(() => {
     try {
-      const cached = localStorage.getItem('cb_market_cache_v2');
+      const cached = localStorage.getItem('mapsaham_market_cache_v1');
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length >= 500) {
+        if (Array.isArray(parsed) && parsed.length >= 50) {
           return parsed;
         }
       }
     } catch {
       // fallback
     }
-    return INITIAL_COINS; // Always initialize with all 1,000 coins!
+    return INITIAL_COINS; // Always initialize with all 168 IDX stocks!
   });
 
   const [timeframe, setTimeframe] = useState<Timeframe>('24h');
   const [sizeBy, setSizeBy] = useState<SizeByMetric>('performance');
   const [contentDisplay, setContentDisplay] = useState<ContentDisplay>('performance');
-  const [currency, setCurrency] = useState<Currency>('USD');
+  const [currency, setCurrency] = useState<Currency>('IDR');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('1-100');
   const [colorMode, setColorMode] = useState<ColorMode>('classic');
   const [physics, setPhysics] = useState<PhysicsSettings>(DEFAULT_PHYSICS);
@@ -273,7 +273,7 @@ export default function App() {
         if (isMounted && enriched && enriched.length > 0) {
           setCoins(enriched);
           try {
-            localStorage.setItem('cb_market_cache_v2', JSON.stringify(enriched));
+            localStorage.setItem('mapsaham_market_cache_v1', JSON.stringify(enriched));
           } catch {
             // ignore
           }
@@ -440,22 +440,21 @@ export default function App() {
 
       {/* Main Viewport Container */}
       <main className="relative flex-1 w-full h-full overflow-hidden">
-        {/* Semantic SEO & Crawler Layer (Crawlable by Googlebot and search engines without impacting Canvas UI) */}
-        <section className="sr-only" aria-label="Cryptocurrency Live Market Overview">
-          <h1>CryptoBubbles &amp; CryptoApples - Interactive Cryptocurrency Market Heatmap</h1>
+        {/* Semantic SEO & Crawler Layer */}
+        <section className="sr-only" aria-label="Saham Indonesia Live Market Heatmap Overview">
+          <h1>MapSaham - Visualisasi Interaktif &amp; Heatmap Saham IHSG IDX</h1>
           <p>
-            Real-time interactive cryptocurrency market visualizer and bubble heatmap tracking Bitcoin (BTC), 
-            Ethereum (ETH), Solana (SOL), and the top 1000 altcoins. Analyze live price changes, 24-hour performance percentage, 
-            market capitalization, and trading volume with interactive physics simulation. The modern, real-time CryptoBubbles alternative.
+            Visualisasi pasar saham Indonesia (IHSG / IDX) interaktif berbasis bubble dan apple physics. Pantau BBCA, 
+            BBRI, BMRI, TLKM, ASII, BBNI dan saham top bursa efek Indonesia secara real-time / delayed data dari Yahoo Finance.
           </p>
-          <h2>Top 100 Cryptocurrencies Live Market Data &amp; Performance</h2>
+          <h2>Daftar Saham Top Bursa Efek Indonesia</h2>
           <ul>
             {coins.slice(0, 100).map((coin) => (
               <li key={coin.id}>
                 <span>#{coin.rank} {coin.name} ({coin.symbol})</span>
-                <span>Price: ${coin.price.toLocaleString()}</span>
-                <span>24h Change: {coin.changes['24h'] >= 0 ? '+' : ''}{coin.changes['24h']}%</span>
-                <span>Market Cap: ${(coin.marketCap / 1e9).toFixed(2)}B</span>
+                <span>Harga: Rp {coin.price.toLocaleString('id-ID')}</span>
+                <span>Perubahan 24j: {coin.changes['24h'] >= 0 ? '+' : ''}{coin.changes['24h']}%</span>
+                <span>Market Cap: Rp {(coin.marketCap / 1e12).toFixed(1)}T</span>
               </li>
             ))}
           </ul>

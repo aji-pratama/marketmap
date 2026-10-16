@@ -16,7 +16,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
   const handleDownload = () => {
     sound.playTick();
     const link = document.createElement('a');
-    link.download = `cryptobubbles-${new Date().toISOString().slice(0, 10)}.png`;
+    link.download = `mapsaham-${new Date().toISOString().slice(0, 10)}.png`;
     link.href = imageSrc;
     link.click();
   };

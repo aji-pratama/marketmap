@@ -17,47 +17,47 @@ export const CRYPTO_NEWS_ITEMS: NewsItem[] = [
   {
     id: 'news-1',
     tag: 'MARKET',
-    title: 'Spot Bitcoin ETFs record $642M single-day net inflow led by institutional allocators',
-    source: 'Bloomberg',
-    time: '4m ago',
-    details: 'Institutional demand accelerated this morning across major spot Bitcoin ETFs, representing the third-largest daily inflow streak this quarter.',
-    impactCoins: ['BTC', 'ETH']
+    title: 'IHSG bergerak dinamis, investor asing mencatatkan akumulasi bersih pada saham perbankan big-caps',
+    source: 'IDX Market',
+    time: '5m ago',
+    details: 'Arus dana institusi dan investor asing terpantau aktif di saham BBCA, BBRI, BMRI, dan BBNI seiring ekspektasi kinerja dividen dan stabilitas suku bunga.',
+    impactCoins: ['BBCA', 'BBRI', 'BMRI']
   },
   {
     id: 'news-2',
-    tag: 'ON-CHAIN',
-    title: 'Solana DEX 24h trading volume reaches $3.8B, capturing 38% market share of decentralized swaps',
-    source: 'DeFiLlama',
-    time: '12m ago',
-    details: 'Decentralized exchange volume across Solana infrastructure exceeded all competing layer-1 networks combined over the trailing 24-hour window.',
-    impactCoins: ['SOL', 'RAY']
+    tag: 'POLICY',
+    title: 'Bank Indonesia mempertahankan suku bunga acuan BI-Rate, likuiditas perbankan nasional terjaga kuat',
+    source: 'Bank Indonesia',
+    time: '18m ago',
+    details: 'Keputusan ini konsisten dengan fokus kebijakan moneter yang pro-stability untuk memperkuat stabilitas nilai tukar Rupiah.',
+    impactCoins: ['BMRI', 'BBNI']
   },
   {
     id: 'news-3',
     tag: 'MACRO',
-    title: 'Global broad money aggregates expand for fifth consecutive month',
-    source: 'MacroPulse',
-    time: '29m ago',
-    details: 'Global liquidity aggregates expanded across central bank balance sheets, historically exhibiting strong positive correlation with crypto market capitalization.',
-    impactCoins: ['BTC', 'ETH']
+    title: 'Sektor energi dan komoditas tambang catatkan peningkatan volume transaksi harian di bursa',
+    source: 'Bloomberg Technoz',
+    time: '32m ago',
+    details: 'Penguatan harga batubara dan nikel global mendorong optimisme pada saham pertambangan dan energi terbarukan.',
+    impactCoins: ['ADRO', 'PTBA', 'AMMN']
   },
   {
     id: 'news-4',
-    tag: 'DEFI',
-    title: 'Total Value Locked in Cross-Chain Liquid Staking reaches $118B with low liquidation rates',
-    source: 'DefiPulse',
-    time: '41m ago',
-    details: 'Major lending protocols experienced zero bad debt over recent market volatility, demonstrating automated auction resiliency.',
-    impactCoins: ['ETH', 'AAVE']
+    tag: 'ETF',
+    title: 'OJK catat pertumbuhan Single Investor Identification (SID) pasar modal melampaui 14 juta investor',
+    source: 'OJK',
+    time: '45m ago',
+    details: 'Partisipasi investor ritel domestik terus menunjukkan tren peningkatan yang kokoh, didukung oleh penetrasi aplikasi sekuritas online.',
+    impactCoins: ['GOTO', 'TLKM']
   },
   {
     id: 'news-5',
-    tag: 'POLICY',
-    title: 'Standardized licensing frameworks issued for tokenized commercial bonds',
-    source: 'Financial Times',
-    time: '55m ago',
-    details: 'Financial regulators issued formal guidance for custody and clearing of tokenized debt securities on public blockchains.',
-    impactCoins: ['ONDO', 'LINK']
+    tag: 'ON-CHAIN',
+    title: 'Sektor infrastruktur telekomunikasi dan menara perluas jaringan fiber optik dan data center',
+    source: 'Bisnis Indonesia',
+    time: '58m ago',
+    details: 'Ekspansi kapasitas komputasi cloud dan kebutuhan konektivitas kecerdasan buatan mendorong pendapatan berulang emiten menara.',
+    impactCoins: ['TLKM', 'ISAT', 'EXCL']
   }
 ];
 
