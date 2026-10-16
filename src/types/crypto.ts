@@ -1,4 +1,4 @@
-export type Timeframe = '1h' | '24h' | '7d' | '30d' | '1y';
+export type Timeframe = '1D' | '5D' | '1M' | '6M' | 'YTD' | '1Y' | '5Y' | 'Max';
 
 export type SizeByMetric = 'performance' | 'market_cap' | 'volume';
 
@@ -45,13 +45,7 @@ export interface CryptoCoin {
   symbol: string;
   rank: number;
   price: number; // in IDR base
-  changes: {
-    '1h': number;
-    '24h': number;
-    '7d': number;
-    '30d': number;
-    '1y': number;
-  };
+  changes: Record<string, number>;
   marketCap: number; // in IDR
   volume24h: number; // in IDR
   high24h: number;

@@ -113,12 +113,43 @@ export async function fetchMarketCoins(page = 1): Promise<CryptoCoin[]> {
 /**
  * Fetch detailed chart data for an individual stock from Yahoo Finance
  */
-export async function fetchStockChart(symbol: string, range: '1d' | '5d' | '1mo' | '1y' = '1mo'): Promise<number[]> {
+export async function fetchStockChart(
+  symbol: string, 
+  range: Timeframe = '1M'
+): Promise<number[]> {
   const s = symbol.endsWith('.JK') ? symbol : `${symbol.toUpperCase()}.JK`;
-  const interval = range === '1d' ? '5m' : range === '5d' ? '15m' : '1d';
+  
+  let yahooRange = '1mo';
+  let interval = '1d';
+
+  if (range === '1D') {
+    yahooRange = '1d';
+    interval = '5m';
+  } else if (range === '5D') {
+    yahooRange = '5d';
+    interval = '15m';
+  } else if (range === '1M') {
+    yahooRange = '1mo';
+    interval = '1d';
+  } else if (range === '6M') {
+    yahooRange = '6mo';
+    interval = '1d';
+  } else if (range === 'YTD') {
+    yahooRange = 'ytd';
+    interval = '1d';
+  } else if (range === '1Y') {
+    yahooRange = '1y';
+    interval = '1d';
+  } else if (range === '5Y') {
+    yahooRange = '5y';
+    interval = '1wk';
+  } else if (range === 'Max') {
+    yahooRange = 'max';
+    interval = '1mo';
+  }
 
   try {
-    const res = await fetch(`/api/yahoo/chart/${s}?range=${range}&interval=${interval}`);
+    const res = await fetch(`/api/yahoo/chart/${s}?range=${yahooRange}&interval=${interval}`);
     if (res.ok) {
       const data = await res.json();
       const quotes = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];

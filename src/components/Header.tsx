@@ -88,11 +88,14 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   const timeframes: { id: Timeframe; label: string }[] = [
-    { id: '1h', label: '1H' },
-    { id: '24h', label: '24H' },
-    { id: '7d', label: '7D' },
-    { id: '30d', label: '30D' },
-    { id: '1y', label: '1Y' },
+    { id: '1D', label: '1D' },
+    { id: '5D', label: '5D' },
+    { id: '1M', label: '1M' },
+    { id: '6M', label: '6M' },
+    { id: 'YTD', label: 'YTD' },
+    { id: '1Y', label: '1Y' },
+    { id: '5Y', label: '5Y' },
+    { id: 'Max', label: 'Max' },
   ];
 
   const rankRanges: { id: RankRange; label: string }[] = [
@@ -379,23 +382,11 @@ export const Header: React.FC<HeaderProps> = ({
             <Search className="w-4 h-4" />
           </button>
 
-          {/* View Mode Segmented Switcher (Apples / Bubbles / Table) */}
+          {/* View Mode Segmented Switcher (Bubbles / Apples / Table) */}
           <div className={`flex items-center p-1 rounded-xl gap-0.5 border ${isDark
               ? 'macos-inset-dark border-white/[0.08]'
               : 'macos-inset-light border-black/[0.06]'
             }`}>
-            <button
-              onClick={() => onSelectViewMode('apples')}
-              title="Apples View"
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all font-bold ${viewMode === 'apples'
-                  ? isDark ? 'macos-btn-dark text-rose-400 shadow-xs' : 'macos-btn-light text-rose-700 shadow-xs'
-                  : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Apple className="w-4 h-4" />
-              <span className="hidden xl:inline">Apples</span>
-            </button>
-
             <button
               onClick={() => onSelectViewMode('bubbles')}
               title="Bubbles View"
@@ -406,6 +397,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <CircleDot className="w-4 h-4" />
               <span className="hidden xl:inline">Bubbles</span>
+            </button>
+
+            <button
+              onClick={() => onSelectViewMode('apples')}
+              title="Apples View"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all font-bold ${viewMode === 'apples'
+                  ? isDark ? 'macos-btn-dark text-rose-400 shadow-xs' : 'macos-btn-light text-rose-700 shadow-xs'
+                  : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
+                }`}
+            >
+              <Apple className="w-4 h-4" />
+              <span className="hidden xl:inline">Apples</span>
             </button>
 
             <button

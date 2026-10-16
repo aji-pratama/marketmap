@@ -48,10 +48,10 @@ export class BubbleSimulation {
   public coins: CryptoCoin[] = [];
 
   // Configuration
-  public timeframe: Timeframe = '24h';
+  public timeframe: Timeframe = '1D';
   public sizeBy: SizeByMetric = 'performance';
   public contentDisplay: ContentDisplay = 'performance';
-  public currency: Currency = 'USD';
+  public currency: Currency = 'IDR';
   public colorMode: ColorMode = 'classic';
   public physics: PhysicsSettings;
   public favorites: Set<string> = new Set();
@@ -135,7 +135,7 @@ export class BubbleSimulation {
   }
 
 
-  public viewMode: 'bubbles' | 'apples' = 'apples';
+  public viewMode: 'bubbles' | 'apples' = 'bubbles';
 
   public setViewMode(mode: 'bubbles' | 'apples') {
     if (this.viewMode === mode) return;

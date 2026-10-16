@@ -16,7 +16,7 @@ interface TableViewProps {
   onSelectCoin: (coin: CryptoCoin) => void;
 }
 
-type SortField = 'rank' | 'name' | 'price' | '1h' | '24h' | '7d' | '30d' | '1y' | 'volume24h' | 'marketCap';
+type SortField = 'rank' | 'name' | 'price' | '1D' | '5D' | '1M' | '6M' | 'YTD' | '1Y' | '5Y' | 'Max' | 'volume24h' | 'marketCap';
 type SortOrder = 'asc' | 'desc';
 
 export const TableView: React.FC<TableViewProps> = ({
@@ -67,13 +67,16 @@ export const TableView: React.FC<TableViewProps> = ({
         aVal = a.price;
         bVal = b.price;
         break;
-      case '1h':
-      case '24h':
-      case '7d':
-      case '30d':
-      case '1y':
-        aVal = a.changes[sortField] || 0;
-        bVal = b.changes[sortField] || 0;
+      case '1D':
+      case '5D':
+      case '1M':
+      case '6M':
+      case 'YTD':
+      case '1Y':
+      case '5Y':
+      case 'Max':
+        aVal = a.changes[sortField] ?? (sortField === '1D' ? a.changes['24h'] : 0);
+        bVal = b.changes[sortField] ?? (sortField === '1D' ? b.changes['24h'] : 0);
         break;
       case 'volume24h':
         aVal = a.volume24h;
@@ -140,25 +143,29 @@ export const TableView: React.FC<TableViewProps> = ({
                     <span>Harga (Rp)</span>
                     {renderSortIndicator('price')}
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('1h')}>
-                    <span>1H</span>
-                    {renderSortIndicator('1h')}
+                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('1D')}>
+                    <span>1D</span>
+                    {renderSortIndicator('1D')}
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('24h')}>
-                    <span>24H</span>
-                    {renderSortIndicator('24h')}
+                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('5D')}>
+                    <span>5D</span>
+                    {renderSortIndicator('5D')}
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('7d')}>
-                    <span>7D</span>
-                    {renderSortIndicator('7d')}
+                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('1M')}>
+                    <span>1M</span>
+                    {renderSortIndicator('1M')}
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('30d')}>
-                    <span>30D</span>
-                    {renderSortIndicator('30d')}
+                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('6M')}>
+                    <span>6M</span>
+                    {renderSortIndicator('6M')}
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('1y')}>
+                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('YTD')}>
+                    <span>YTD</span>
+                    {renderSortIndicator('YTD')}
+                  </th>
+                  <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('1Y')}>
                     <span>1Y</span>
-                    {renderSortIndicator('1y')}
+                    {renderSortIndicator('1Y')}
                   </th>
                   <th scope="col" className="px-3 py-2.5 text-right cursor-pointer group" onClick={() => handleSort('volume24h')}>
                     <span>24h Vol</span>
@@ -168,17 +175,22 @@ export const TableView: React.FC<TableViewProps> = ({
                     <span>Market Cap</span>
                     {renderSortIndicator('marketCap')}
                   </th>
-                  <th scope="col" className="px-3 py-2.5 text-center">7D Trend</th>
+                  <th scope="col" className="px-3 py-2.5 text-center">Trend</th>
                 </tr>
               </thead>
               <tbody className="font-mono text-xs divide-y divide-white/[0.04]">
                 {sortedCoins.map((coin) => {
                   const isFav = favorites.includes(coin.id);
-                  const is24hUp = (coin.changes['24h'] || 0) >= 0;
                   const isMatch = Boolean(q && (
                     coin.symbol.toLowerCase().includes(q) || 
                     coin.name.toLowerCase().includes(q)
                   ));
+                  const change1D = coin.changes['1D'] ?? coin.changes['24h'] ?? 0;
+                  const change5D = coin.changes['5D'] ?? coin.changes['7d'] ?? 0;
+                  const change1M = coin.changes['1M'] ?? coin.changes['30d'] ?? 0;
+                  const change6M = coin.changes['6M'] ?? 0;
+                  const changeYTD = coin.changes['YTD'] ?? 0;
+                  const change1Y = coin.changes['1Y'] ?? coin.changes['1y'] ?? 0;
 
                   return (
                     <tr
@@ -255,20 +267,23 @@ export const TableView: React.FC<TableViewProps> = ({
                       <td className="px-3 py-2.5 text-right font-semibold font-mono">
                         {formatPrice(coin.price, currency)}
                       </td>
-                      <td className={`px-3 py-2.5 text-right font-medium font-mono ${coin.changes['1h'] >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {formatPercent(coin.changes['1h'])}
+                      <td className={`px-3 py-2.5 text-right font-bold font-mono ${change1D >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {formatPercent(change1D)}
                       </td>
-                      <td className={`px-3 py-2.5 text-right font-bold font-mono ${coin.changes['24h'] >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {formatPercent(coin.changes['24h'])}
+                      <td className={`px-3 py-2.5 text-right font-medium font-mono ${change5D >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {formatPercent(change5D)}
                       </td>
-                      <td className={`px-3 py-2.5 text-right font-medium font-mono ${coin.changes['7d'] >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {formatPercent(coin.changes['7d'])}
+                      <td className={`px-3 py-2.5 text-right font-medium font-mono ${change1M >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {formatPercent(change1M)}
                       </td>
-                      <td className={`px-3 py-2.5 text-right font-medium font-mono ${coin.changes['30d'] >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {formatPercent(coin.changes['30d'])}
+                      <td className={`px-3 py-2.5 text-right font-medium font-mono ${change6M >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {formatPercent(change6M)}
                       </td>
-                      <td className={`px-3 py-2.5 text-right font-medium font-mono ${coin.changes['1y'] >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {formatPercent(coin.changes['1y'])}
+                      <td className={`px-3 py-2.5 text-right font-medium font-mono ${changeYTD >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {formatPercent(changeYTD)}
+                      </td>
+                      <td className={`px-3 py-2.5 text-right font-medium font-mono ${change1Y >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {formatPercent(change1Y)}
                       </td>
                       <td className={`px-3 py-2.5 text-right font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                         {formatNumber(coin.volume24h, currency)}

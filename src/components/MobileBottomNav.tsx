@@ -45,17 +45,20 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const isDark = theme === 'dark';
 
   const viewModes: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
-    { id: 'apples', label: 'Apples View', icon: <Apple className="w-4 h-4 text-rose-500" /> },
     { id: 'bubbles', label: 'Bubbles View', icon: <CircleDot className="w-4 h-4 text-emerald-400" /> },
+    { id: 'apples', label: 'Apples View', icon: <Apple className="w-4 h-4 text-rose-500" /> },
     { id: 'table', label: 'Table View', icon: <Table className="w-4 h-4 text-cyan-400" /> },
   ];
 
   const timeframes: { id: Timeframe; label: string; desc: string }[] = [
-    { id: '1h', label: '1H', desc: '1 Hour Momentum' },
-    { id: '24h', label: '24H', desc: '24 Hours Daily' },
-    { id: '7d', label: '7D', desc: '7 Days Weekly' },
-    { id: '30d', label: '30D', desc: '30 Days Monthly' },
-    { id: '1y', label: '1Y', desc: '1 Year Annual' },
+    { id: '1D', label: '1D', desc: '1 Hari (Daily)' },
+    { id: '5D', label: '5D', desc: '5 Hari Bursa' },
+    { id: '1M', label: '1M', desc: '1 Bulan' },
+    { id: '6M', label: '6M', desc: '6 Bulan' },
+    { id: 'YTD', label: 'YTD', desc: 'Year to Date' },
+    { id: '1Y', label: '1Y', desc: '1 Tahun' },
+    { id: '5Y', label: '5Y', desc: '5 Tahun' },
+    { id: 'Max', label: 'Max', desc: 'Semua Periode' },
   ];
 
   const rankRanges: { id: RankRange; label: string }[] = [

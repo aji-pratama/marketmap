@@ -34,7 +34,7 @@ const DEFAULT_PHYSICS: PhysicsSettings = {
 export default function App() {
   const [coins, setCoins] = useState<CryptoCoin[]>(() => {
     try {
-      const cached = localStorage.getItem('mapsaham_market_cache_v1');
+      const cached = localStorage.getItem('mapsaham_market_cache_v3');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length >= 50) {
@@ -47,7 +47,7 @@ export default function App() {
     return INITIAL_COINS; // Always initialize with all 168 IDX stocks!
   });
 
-  const [timeframe, setTimeframe] = useState<Timeframe>('24h');
+  const [timeframe, setTimeframe] = useState<Timeframe>('1D');
   const [sizeBy, setSizeBy] = useState<SizeByMetric>('performance');
   const [contentDisplay, setContentDisplay] = useState<ContentDisplay>('performance');
   const [currency, setCurrency] = useState<Currency>('IDR');
@@ -55,7 +55,7 @@ export default function App() {
   const [colorMode, setColorMode] = useState<ColorMode>('classic');
   const [physics, setPhysics] = useState<PhysicsSettings>(DEFAULT_PHYSICS);
   const [liveSimulation, setLiveSimulation] = useState<boolean>(true);
-  const [viewMode, setViewMode] = useState<ViewMode>('apples');
+  const [viewMode, setViewMode] = useState<ViewMode>('bubbles');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -273,7 +273,7 @@ export default function App() {
         if (isMounted && enriched && enriched.length > 0) {
           setCoins(enriched);
           try {
-            localStorage.setItem('mapsaham_market_cache_v1', JSON.stringify(enriched));
+            localStorage.setItem('mapsaham_market_cache_v3', JSON.stringify(enriched));
           } catch {
             // ignore
           }

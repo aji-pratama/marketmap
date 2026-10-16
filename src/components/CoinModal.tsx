@@ -21,7 +21,7 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   currency,
   isFavorite,
   theme = 'dark',
-  timeframe: initialTimeframe = '24h',
+  timeframe: initialTimeframe = '1D',
   onToggleFavorite,
   onClose,
 }) => {
@@ -46,7 +46,7 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   const isDark = theme === 'dark';
   
   // Active timeframe calculations
-  const activeTfChange = coin.changes[activeTf] ?? (coin.changes['24h'] || 0);
+  const activeTfChange = coin.changes[activeTf] ?? (coin.changes['1D'] || coin.changes['24h'] || 0);
   const isActiveTfGain = activeTfChange >= 0;
 
   // 24h Low/High progress
@@ -56,19 +56,25 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   const currentPos = Math.max(0, Math.min(100, ((coin.price - low) / range) * 100));
 
   const timeframes: { label: string; key: Timeframe; val: number }[] = [
-    { label: '1H', key: '1h', val: coin.changes['1h'] ?? 0 },
-    { label: '24H', key: '24h', val: coin.changes['24h'] ?? 0 },
-    { label: '7D', key: '7d', val: coin.changes['7d'] ?? 0 },
-    { label: '30D', key: '30d', val: coin.changes['30d'] ?? 0 },
-    { label: '1Y', key: '1y', val: coin.changes['1y'] ?? 0 },
+    { label: '1D', key: '1D', val: coin.changes['1D'] ?? coin.changes['24h'] ?? 0 },
+    { label: '5D', key: '5D', val: coin.changes['5D'] ?? coin.changes['7d'] ?? 0 },
+    { label: '1M', key: '1M', val: coin.changes['1M'] ?? coin.changes['30d'] ?? 0 },
+    { label: '6M', key: '6M', val: coin.changes['6M'] ?? 0 },
+    { label: 'YTD', key: 'YTD', val: coin.changes['YTD'] ?? 0 },
+    { label: '1Y', key: '1Y', val: coin.changes['1Y'] ?? coin.changes['1y'] ?? 0 },
+    { label: '5Y', key: '5Y', val: coin.changes['5Y'] ?? 0 },
+    { label: 'Max', key: 'Max', val: coin.changes['Max'] ?? 0 },
   ];
 
   const tfTitleMap: Record<Timeframe, string> = {
-    '1h': 'Tren Harga 1 Jam',
-    '24h': 'Tren Harga 24 Jam',
-    '7d': 'Tren Harga 7 Hari',
-    '30d': 'Tren Harga 30 Hari',
-    '1y': 'Tren Harga 1 Tahun',
+    '1D': 'Tren Harga 1 Hari',
+    '5D': 'Tren Harga 5 Hari',
+    '1M': 'Tren Harga 1 Bulan',
+    '6M': 'Tren Harga 6 Bulan',
+    'YTD': 'Tren Harga Year-to-Date (YTD)',
+    '1Y': 'Tren Harga 1 Tahun',
+    '5Y': 'Tren Harga 5 Tahun',
+    'Max': 'Tren Harga Sepanjang Masa (Max)',
   };
 
   // Fetch real historical chart from Yahoo Finance when active timeframe or symbol changes
@@ -80,21 +86,30 @@ export const CoinModal: React.FC<CoinModalProps> = ({
       let range = '1d';
       let interval = '5m';
 
-      if (activeTf === '1h') {
-        range = '1d';
-        interval = '2m';
-      } else if (activeTf === '24h') {
+      if (activeTf === '1D') {
         range = '1d';
         interval = '5m';
-      } else if (activeTf === '7d') {
+      } else if (activeTf === '5D') {
         range = '5d';
         interval = '15m';
-      } else if (activeTf === '30d') {
+      } else if (activeTf === '1M') {
         range = '1mo';
         interval = '1d';
-      } else if (activeTf === '1y') {
+      } else if (activeTf === '6M') {
+        range = '6mo';
+        interval = '1d';
+      } else if (activeTf === 'YTD') {
+        range = 'ytd';
+        interval = '1d';
+      } else if (activeTf === '1Y') {
         range = '1y';
         interval = '1d';
+      } else if (activeTf === '5Y') {
+        range = '5y';
+        interval = '1wk';
+      } else if (activeTf === 'Max') {
+        range = 'max';
+        interval = '1mo';
       }
 
       try {
@@ -136,24 +151,11 @@ export const CoinModal: React.FC<CoinModalProps> = ({
     const startPrice = Math.max(0.000001, coin.price / (1 + tfChange / 100));
     const endPrice = coin.price;
 
-    if (activeTf === '24h') {
+    if (activeTf === '1D') {
       return rawSpark;
     }
 
-    if (activeTf === '1h') {
-      const slice = rawSpark.slice(-8);
-      const min = Math.min(...slice);
-      const max = Math.max(...slice);
-      const span = max - min || 1;
-      return slice.map((val, idx) => {
-        const progress = idx / (slice.length - 1);
-        const baseline = startPrice + (endPrice - startPrice) * progress;
-        const wiggle = ((val - min) / span - 0.5) * (Math.abs(endPrice - startPrice) * 0.4 || endPrice * 0.005);
-        return Math.max(0.000001, baseline + wiggle);
-      });
-    }
-
-    // 7d, 30d, 1y: shape with authentic wave harmonics
+    // 5D, 1M, 6M, YTD, 1Y, 5Y, Max: shape with authentic wave harmonics
     const count = 30;
     const pts: number[] = [];
     for (let i = 0; i < count; i++) {
