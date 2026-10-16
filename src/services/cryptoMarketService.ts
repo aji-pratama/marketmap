@@ -86,6 +86,7 @@ export async function fetchAllMarketCoins(): Promise<CryptoCoin[]> {
           volume24h: live.volume24h || stock.volume24h,
           changes: {
             ...stock.changes,
+            '1D': live.change24h,
             '24h': live.change24h,
           },
         };

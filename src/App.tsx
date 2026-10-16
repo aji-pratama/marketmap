@@ -317,6 +317,7 @@ export default function App() {
               volume24h: u.volume24h || c.volume24h,
               changes: {
                 ...c.changes,
+                '1D': u.change24h !== undefined ? Number(u.change24h.toFixed(2)) : (c.changes['1D'] ?? c.changes['24h']),
                 '24h': u.change24h !== undefined ? Number(u.change24h.toFixed(2)) : c.changes['24h'],
               },
             };
