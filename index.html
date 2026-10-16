@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    
+    <!-- Primary SEO Title & Meta Description -->
+    <title>CryptoBubbles &amp; CryptoApples - Live Interactive Crypto Market Heatmap &amp; Visualization</title>
+    <meta name="title" content="CryptoBubbles &amp; CryptoApples - Live Interactive Crypto Market Heatmap &amp; Visualization" />
+    <meta name="description" content="Explore live cryptocurrency market movements with interactive physics bubbles and apples. Track Bitcoin, Ethereum, Solana, and top 1000 crypto prices, 24h performance, market cap, and trading volume in real time. The modern CryptoBubbles alternative." />
+    <meta name="keywords" content="cryptobubbles, crypto bubbles, crypto bubbles alternative, crypto heatmap, crypto apples, crypto bubble chart, interactive crypto visualizer, bitcoin live price, cryptocurrency market cap, top 100 crypto, crypto physics simulator" />
+    <meta name="author" content="CryptoApples" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <link rel="canonical" href="https://cryptoapples.com/" />
+    <meta name="theme-color" content="#0b0e14" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cryptoapples.com/" />
+    <meta property="og:title" content="CryptoBubbles &amp; CryptoApples - Live Interactive Crypto Market Heatmap" />
+    <meta property="og:description" content="Explore live cryptocurrency market movements with interactive physics bubbles and apples. Track Bitcoin, Ethereum, Solana, and top 1000 crypto prices in real time." />
+    <meta property="og:site_name" content="CryptoApples - Interactive Crypto Heatmap" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://cryptoapples.com/" />
+    <meta name="twitter:title" content="CryptoBubbles &amp; CryptoApples - Live Interactive Crypto Market Heatmap" />
+    <meta name="twitter:description" content="Explore live cryptocurrency market movements with interactive physics bubbles and apples. Real-time Binance feeds, performance, and volume." />
+
+    <!-- Google Fonts Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Structured Data (JSON-LD) for SEO & Google Rich Snippets -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://cryptoapples.com/#webapp",
+          "name": "CryptoBubbles & CryptoApples",
+          "url": "https://cryptoapples.com/",
+          "applicationCategory": "FinanceApplication",
+          "operatingSystem": "All (Web, iOS, Android, macOS, Windows)",
+          "description": "Interactive real-time cryptocurrency market visualization and bubble heatmap. Tracks performance, market cap, and volume across top 1000 crypto assets with live websocket data feeds.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Interactive physics-based bubble and apple market visualization",
+            "Real-time live price streaming from Binance and leading exchanges",
+            "Customizable timeframes: 1 Hour, 24 Hours, 7 Days, 30 Days, 1 Year",
+            "Sorting by Performance %, Market Capitalization, and 24h Volume",
+            "My Favorites bookmarking and custom asset spotlight search",
+            "Classic Mac OS aesthetic and full mobile responsive dock"
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://cryptoapples.com/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is CryptoBubbles and CryptoApples?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "CryptoBubbles (and CryptoApples) is an interactive visualization tool for the cryptocurrency market. Each coin is depicted as a floating bubble or apple, where the size and color represent market performance, capitalization, and real-time trading activity."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does bubble size and color work?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "By default, bubble size corresponds to the percentage gain or loss over your selected timeframe (1H, 24H, 7D, 30D, 1Y) or market cap. Green bubbles represent positive price appreciation, while red bubbles indicate price decreases, scaled proportionally to the magnitude of the change."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How is CryptoApples different from traditional CryptoBubbles?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "CryptoApples offers dual view modes: classic soap bubbles and organic physics apples with coin ranks embedded right in the green leaves, smooth 60fps canvas physics, live websocket updates, official brand tokens, and a responsive Classic Mac OS interface."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body class="bg-[#0b0e14] text-slate-100 antialiased overflow-hidden select-none">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

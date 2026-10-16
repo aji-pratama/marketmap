@@ -1,0 +1,6 @@
+{
+  "name": "CryptoBubbles - Interactive Crypto Market Visualization",
+  "description": "Interactive physics-based cryptocurrency market visualization with bubble sizes, multi-timeframe analytics, real-time prices, exchange affiliates, and classic features.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

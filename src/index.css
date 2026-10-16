@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Lucida Grande", sans-serif;
+    letter-spacing: -0.012em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .font-mono, [data-mono="true"], .tabular-nums {
+    font-family: "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Classic Mac OS Window Chrome & Inset Surfaces */
+.macos-window {
+  box-shadow: 0 24px 70px -12px rgba(0, 0, 0, 0.70), 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.macos-window-light {
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+/* Classic Mac OS Titlebar Gradient */
+.macos-titlebar-dark {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.02) 100%), #262833;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+}
+
+.macos-titlebar-light {
+  background: linear-gradient(180deg, #ececec 0%, #d8d8d8 100%);
+  border-bottom: 1px solid #b8b8b8;
+}
+
+/* Mac OS Tactile Push Button */
+.macos-btn-dark {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 100%), #2c2f3c;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.macos-btn-dark:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0.06) 100%), #353847;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.macos-btn-dark:active {
+  background: #1f212a;
+  box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.6);
+  transform: translateY(0.5px);
+}
+
+.macos-btn-light {
+  background: linear-gradient(180deg, #ffffff 0%, #ebebeb 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 1px 0 #ffffff;
+  border: 1px solid #b0b0b0;
+}
+
+.macos-btn-light:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f4f4 100%);
+}
+
+.macos-btn-light:active {
+  background: #e2e2e2;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  transform: translateY(0.5px);
+}
+
+/* Mac OS Inset Well (soft inset without harsh box borders) */
+.macos-inset-dark {
+  background: rgba(14, 16, 22, 0.65);
+  box-shadow: inset 0 1px 2.5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.macos-inset-light {
+  background: #eaecef;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Apple Liquid / Glass Surfaces */
+.apple-glass {
+  background: rgba(18, 18, 22, 0.72);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+}
+
+.apple-glass-card {
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(12px);
+}
+
+.apple-dropdown {
+  background: rgba(28, 28, 30, 0.94);
+  backdrop-filter: blur(36px) saturate(210%);
+  -webkit-backdrop-filter: blur(36px) saturate(210%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+}
+
+/* Apple Slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.12);
+  height: 4px;
+  border-radius: 9999px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Running News Ticker Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 52s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Accessible semantic SEO & screen-reader container */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+

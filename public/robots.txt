@@ -1,0 +1,6 @@
+# Allow all web search crawlers and AI search bots
+User-agent: *
+Allow: /
+
+# Canonical XML Sitemap
+Sitemap: https://cryptoapples.com/sitemap.xml

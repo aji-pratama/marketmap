@@ -1,0 +1,21 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Candlestick Stem -->
+  <line x1="50" y1="4" x2="50" y2="12" stroke="#10b981" stroke-width="3" stroke-linecap="round" />
+  <rect x="46" y="12" width="8" height="14" rx="2" fill="#10b981" />
+  <line x1="50" y1="26" x2="50" y2="32" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Leaf: Sleek upward leaf -->
+  <path d="M 54 22 C 65 11 78 13 85 20 C 85 29 74 35 55 27 Z" fill="#10b981" />
+
+  <!-- Apple Main Body - Pure Clean Silhouette -->
+  <path
+    d="M 50 34
+       C 42 26, 24 26, 15 38
+       C 4 52, 6 74, 24 88
+       C 34 96, 44 94, 50 90
+       C 56 94, 66 96, 76 88
+       C 94 74, 96 52, 85 38
+       C 76 26, 58 26, 50 34 Z"
+    fill="#10b981"
+  />
+</svg>
