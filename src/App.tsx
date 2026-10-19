@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { 
-  CryptoCoin, Timeframe, SizeByMetric, ContentDisplay, Currency, 
-  CategoryFilter, ColorMode, PhysicsSettings, ViewMode, ThemeMode 
+import {
+  CryptoCoin, Timeframe, SizeByMetric, ContentDisplay, Currency,
+  CategoryFilter, ColorMode, PhysicsSettings, ViewMode, ThemeMode
 } from './types/crypto';
 import { INITIAL_COINS, formatPrice, formatPercent, formatNumber } from './data/cryptoData';
 import { sound } from './utils/audio';
@@ -14,11 +14,11 @@ import { ScreenshotModal } from './components/ScreenshotModal';
 import { NewsTicker } from './components/NewsTicker';
 import { BubbleIcon } from './components/BubbleIcon';
 import { MobileBottomNav } from './components/MobileBottomNav';
-import { 
+import {
   fetchAllMarketCoins,
-  fetchMarketCoins, 
-  enrichWithBinancePrices, 
-  subscribeToLiveBinanceStream 
+  fetchMarketCoins,
+  enrichWithBinancePrices,
+  subscribeToLiveBinanceStream
 } from './services/cryptoMarketService';
 
 const DEFAULT_PHYSICS: PhysicsSettings = {
@@ -34,7 +34,7 @@ const DEFAULT_PHYSICS: PhysicsSettings = {
 export default function App() {
   const [coins, setCoins] = useState<CryptoCoin[]>(() => {
     try {
-      const cached = localStorage.getItem('mapsaham_market_cache_v4');
+      const cached = localStorage.getItem('MarketMap_market_cache_v4');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length >= 50) {
@@ -273,7 +273,7 @@ export default function App() {
         if (isMounted && enriched && enriched.length > 0) {
           setCoins(enriched);
           try {
-            localStorage.setItem('mapsaham_market_cache_v4', JSON.stringify(enriched));
+            localStorage.setItem('MarketMap_market_cache_v4', JSON.stringify(enriched));
           } catch {
             // ignore
           }
@@ -289,7 +289,7 @@ export default function App() {
 
     loadMarket();
     const interval = setInterval(loadMarket, 60000);
-    return () => { 
+    return () => {
       isMounted = false;
       clearInterval(interval);
     };
@@ -406,9 +406,8 @@ export default function App() {
   }, [coins, totalMarketCap]);
 
   return (
-    <div className={`flex flex-col h-[100dvh] w-full max-w-full overflow-hidden select-none transition-colors ${
-      isDark ? 'bg-[#0b0e14] text-slate-100' : 'bg-[#f1f5f9] text-slate-800'
-    }`}>
+    <div className={`flex flex-col h-[100dvh] w-full max-w-full overflow-hidden select-none transition-colors ${isDark ? 'bg-[#0b0e14] text-slate-100' : 'bg-[#f1f5f9] text-slate-800'
+      }`}>
       {/* Top Header Bar */}
       <Header
         timeframe={timeframe}
@@ -443,9 +442,9 @@ export default function App() {
       <main className="relative flex-1 w-full h-full overflow-hidden">
         {/* Semantic SEO & Crawler Layer */}
         <section className="sr-only" aria-label="Saham Indonesia Live Market Heatmap Overview">
-          <h1>MapSaham - Visualisasi Interaktif &amp; Heatmap Saham IHSG IDX</h1>
+          <h1>MarketMap - Visualisasi Interaktif &amp; Heatmap Saham IHSG IDX</h1>
           <p>
-            Visualisasi pasar saham Indonesia (IHSG / IDX) interaktif berbasis bubble dan apple physics. Pantau BBCA, 
+            Visualisasi pasar saham Indonesia (IHSG / IDX) interaktif berbasis bubble dan apple physics. Pantau BBCA,
             BBRI, BMRI, TLKM, ASII, BBNI dan saham top bursa efek Indonesia secara real-time / delayed data dari Yahoo Finance.
           </p>
           <h2>Daftar Saham Top Bursa Efek Indonesia</h2>
@@ -462,10 +461,9 @@ export default function App() {
         </section>
 
         {/* Bubbles / Apples Canvas Simulation View */}
-        <div 
-          className={`absolute inset-0 w-full h-full ${
-            viewMode === 'bubbles' || viewMode === 'apples' ? 'block' : 'hidden'
-          }`}
+        <div
+          className={`absolute inset-0 w-full h-full ${viewMode === 'bubbles' || viewMode === 'apples' ? 'block' : 'hidden'
+            }`}
         >
           <canvas
             ref={canvasRef}
@@ -476,16 +474,15 @@ export default function App() {
           {/* Live Hover Inspection HUD - Mac OS Floating Capsule */}
           {hoveredCoin && (
             <div className="absolute top-3 left-3 z-20 pointer-events-none">
-              <div className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                isDark 
-                  ? 'macos-window bg-[#1c1d22]/95 text-slate-100' 
+              <div className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${isDark
+                  ? 'macos-window bg-[#1c1d22]/95 text-slate-100'
                   : 'macos-window-light bg-white/95 text-slate-900'
-              }`}>
-                <BubbleIcon 
-                  symbol={hoveredCoin.symbol} 
-                  colorHex={hoveredCoin.colorHex} 
-                  size={20} 
-                  className={isDark ? 'bg-black/40 rounded' : 'bg-slate-200/50 rounded'} 
+                }`}>
+                <BubbleIcon
+                  symbol={hoveredCoin.symbol}
+                  colorHex={hoveredCoin.colorHex}
+                  size={20}
+                  className={isDark ? 'bg-black/40 rounded' : 'bg-slate-200/50 rounded'}
                 />
                 <div className="flex items-center gap-2 font-mono text-xs tabular-nums">
                   <span className="font-semibold text-slate-400">
@@ -509,23 +506,21 @@ export default function App() {
           {/* Search Highlight Floating HUD Banner */}
           {searchQuery && (viewMode === 'bubbles' || viewMode === 'apples') && (
             <div className="absolute top-3 right-3 z-20 pointer-events-auto">
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all ${
-                isDark 
-                  ? 'macos-window bg-[#1c1d22]/95 text-slate-100' 
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all ${isDark
+                  ? 'macos-window bg-[#1c1d22]/95 text-slate-100'
                   : 'macos-window-light bg-white/95 text-slate-900'
-              }`}>
+                }`}>
                 <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" />
                 <span>
-                  {searchMatchCount > 0 
+                  {searchMatchCount > 0
                     ? `Highlighted: "${searchQuery}" (${searchMatchCount} match${searchMatchCount > 1 ? 'es' : ''})`
                     : `No matches for "${searchQuery}"`}
                 </span>
                 <button
                   onClick={() => setSearchQuery('')}
                   title="Clear search"
-                  className={`ml-1 p-0.5 rounded text-xs leading-none ${
-                    isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
-                  }`}
+                  className={`ml-1 p-0.5 rounded text-xs leading-none ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                    }`}
                 >
                   ✕
                 </button>
@@ -536,15 +531,14 @@ export default function App() {
           {/* Empty State for My Favorites or No Matches */}
           {filteredCoins.length === 0 && (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10 pointer-events-none">
-              <div className={`p-6 sm:p-8 rounded-2xl max-w-sm pointer-events-auto shadow-2xl transition-all ${
-                isDark ? 'macos-window bg-[#1c1d22] text-slate-100' : 'macos-window-light bg-white text-slate-900'
-              }`}>
+              <div className={`p-6 sm:p-8 rounded-2xl max-w-sm pointer-events-auto shadow-2xl transition-all ${isDark ? 'macos-window bg-[#1c1d22] text-slate-100' : 'macos-window-light bg-white text-slate-900'
+                }`}>
                 <div className="text-3xl mb-2 select-none">🍎★</div>
                 <p className="text-sm font-semibold mb-1">
                   {categoryFilter === 'favorites' ? 'No Favorite Coins Yet' : 'No Assets Found'}
                 </p>
                 <p className={`text-xs mb-4 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {categoryFilter === 'favorites' 
+                  {categoryFilter === 'favorites'
                     ? 'Click the star icon ⭐ on any coin card to bookmark it and highlight it in your My Favorites list!'
                     : `No cryptocurrency assets match "${searchQuery}".`}
                 </p>
@@ -554,18 +548,16 @@ export default function App() {
                       sound.playTick();
                       setCategoryFilter('1-100');
                     }}
-                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                      isDark ? 'macos-btn-dark text-amber-300' : 'macos-btn-light text-amber-800'
-                    }`}
+                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${isDark ? 'macos-btn-dark text-amber-300' : 'macos-btn-light text-amber-800'
+                      }`}
                   >
                     Explore Top 100 ➔
                   </button>
                 ) : (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                      isDark ? 'macos-btn-dark text-white' : 'macos-btn-light text-slate-900'
-                    }`}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${isDark ? 'macos-btn-dark text-white' : 'macos-btn-light text-slate-900'
+                      }`}
                   >
                     Clear Search
                   </button>
@@ -593,7 +585,7 @@ export default function App() {
       </main>
 
       {/* Running Breaking News Ticker */}
-      <NewsTicker 
+      <NewsTicker
         theme={theme}
         onSelectCoinTicker={(symbol) => {
           const matched = coins.find((c) => c.symbol.toLowerCase() === symbol.toLowerCase());
@@ -604,9 +596,8 @@ export default function App() {
       />
 
       {/* Classic Mac OS Bottom Status Bar */}
-      <footer className={`w-full px-3 sm:px-5 py-1.5 flex items-center justify-between text-xs font-mono overflow-x-auto select-none z-10 transition-colors shrink-0 tabular-nums mb-14 md:mb-0 ${
-        isDark ? 'macos-titlebar-dark text-slate-400' : 'macos-titlebar-light text-slate-600'
-      }`}>
+      <footer className={`w-full px-3 sm:px-5 py-1.5 flex items-center justify-between text-xs font-mono overflow-x-auto select-none z-10 transition-colors shrink-0 tabular-nums mb-14 md:mb-0 ${isDark ? 'macos-titlebar-dark text-slate-400' : 'macos-titlebar-light text-slate-600'
+        }`}>
         <div className="flex items-center gap-3 sm:gap-4 whitespace-nowrap">
           <div className="flex items-center gap-1.5">
             <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>Assets:</span>

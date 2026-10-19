@@ -16,7 +16,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
   const handleDownload = () => {
     sound.playTick();
     const link = document.createElement('a');
-    link.download = `mapsaham-${new Date().toISOString().slice(0, 10)}.png`;
+    link.download = `MarketMap-${new Date().toISOString().slice(0, 10)}.png`;
     link.href = imageSrc;
     link.click();
   };
@@ -38,7 +38,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs select-none">
-      <div 
+      <div
         className="relative w-full max-w-2xl macos-window bg-[#181a20] rounded-xl overflow-hidden flex flex-col text-slate-100 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -82,9 +82,9 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
 
         <div className="p-5 flex flex-col items-center">
           <div className="w-full max-h-[55vh] overflow-hidden rounded-lg macos-inset-dark flex items-center justify-center p-1">
-            <img 
-              src={imageSrc} 
-              alt="CryptoBubbles Snapshot" 
+            <img
+              src={imageSrc}
+              alt="CryptoBubbles Snapshot"
               className="max-h-[53vh] w-auto object-contain rounded"
             />
           </div>

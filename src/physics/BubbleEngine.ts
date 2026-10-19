@@ -57,8 +57,8 @@ export class BubbleSimulation {
   public favorites: Set<string> = new Set();
 
   // Callbacks
-  public onSelectCoin: (coin: CryptoCoin) => void = () => {};
-  public onHoverCoin: (coin: CryptoCoin | null) => void = () => {};
+  public onSelectCoin: (coin: CryptoCoin) => void = () => { };
+  public onHoverCoin: (coin: CryptoCoin | null) => void = () => { };
 
   // Dragging state
   private draggedBubble: BubbleEntity | null = null;
@@ -1106,11 +1106,11 @@ export class BubbleSimulation {
   }
 
   private drawStar(
-    cx: number, 
-    cy: number, 
-    spikes: number, 
-    outerRadius: number, 
-    innerRadius: number, 
+    cx: number,
+    cy: number,
+    spikes: number,
+    outerRadius: number,
+    innerRadius: number,
     color: string
   ) {
     let rot = (Math.PI / 2) * 3;
@@ -1277,8 +1277,8 @@ export class BubbleSimulation {
           this.ctx.restore();
         } else {
           this.ctx.lineWidth = b.isHovered ? 2.5 : Math.max(1.6, baseR * 0.038);
-          this.ctx.strokeStyle = b.isHovered 
-            ? '#FFFFFF' 
+          this.ctx.strokeStyle = b.isHovered
+            ? '#FFFFFF'
             : (isDark ? 'rgba(20, 10, 5, 0.75)' : 'rgba(30, 20, 15, 0.40)');
           this.drawApplePath(appleRx, appleRy);
           this.ctx.stroke();
@@ -1477,11 +1477,11 @@ export class BubbleSimulation {
         const starX = baseR * 0.52;
         const starY = -baseR * 0.52;
         this.drawStar(
-          starX, 
-          starY, 
-          5, 
-          starOuter, 
-          starInner, 
+          starX,
+          starY,
+          5,
+          starOuter,
+          starInner,
           '#FACC15'
         );
       }
@@ -1663,7 +1663,7 @@ export class BubbleSimulation {
     // Add watermark
     tempCtx.font = '700 18px "Plus Jakarta Sans", sans-serif';
     tempCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    tempCtx.fillText('MapSaham.com', 24, tempCanvas.height - 24);
+    tempCtx.fillText('MarketMap.com', 24, tempCanvas.height - 24);
 
     tempCtx.font = '500 13px "JetBrains Mono", monospace';
     tempCtx.fillStyle = 'rgba(255, 255, 255, 0.5)';
