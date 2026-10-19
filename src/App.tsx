@@ -416,10 +416,10 @@ export default function App() {
     return coins.reduce((acc, c) => acc + c.volume24h, 0);
   }, [coins]);
 
-  const btcDominance = useMemo(() => {
-    const btc = coins.find((c) => c.symbol === 'BTC');
-    if (!btc || totalMarketCap === 0) return 56.4;
-    return ((btc.marketCap / totalMarketCap) * 100).toFixed(1);
+  const topStockDominance = useMemo(() => {
+    const bbca = coins.find((c) => c.symbol === 'BBCA');
+    if (!bbca || totalMarketCap === 0) return '11.8';
+    return ((bbca.marketCap / totalMarketCap) * 100).toFixed(1);
   }, [coins, totalMarketCap]);
 
   return (
@@ -638,14 +638,14 @@ export default function App() {
           <span className="hidden sm:inline opacity-30">·</span>
 
           <div className="hidden sm:flex items-center gap-1.5">
-            <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>BTC Dom:</span>
-            <span className="font-semibold text-emerald-500">{btcDominance}%</span>
+            <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>BBCA Dom:</span>
+            <span className="font-semibold text-emerald-500">{topStockDominance}%</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 pl-4 text-[11px] whitespace-nowrap">
           <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>
-            Binance Real-Time Live Feed
+            Yahoo Finance IDX Delayed / Real-Time Data
           </span>
         </div>
       </footer>
