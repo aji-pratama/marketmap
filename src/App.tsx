@@ -658,6 +658,21 @@ export default function App() {
           isFavorite={favorites.includes(selectedCoin.id)}
           theme={theme}
           timeframe={timeframe}
+          onSelectTimeframe={(tf) => setTimeframe(tf)}
+          onUpdateCoinChanges={(symbol, newChanges) => {
+            setCoins((prev) =>
+              prev.map((c) =>
+                c.symbol.toUpperCase() === symbol.toUpperCase()
+                  ? { ...c, changes: { ...c.changes, ...newChanges } }
+                  : c
+              )
+            );
+            setSelectedCoin((prev) =>
+              prev && prev.symbol.toUpperCase() === symbol.toUpperCase()
+                ? { ...prev, changes: { ...prev.changes, ...newChanges } }
+                : prev
+            );
+          }}
           onToggleFavorite={handleToggleFavorite}
           onClose={() => {
             setSelectedCoin(null);

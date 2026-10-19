@@ -14,6 +14,8 @@ interface CoinModalProps {
   timeframe?: Timeframe;
   onToggleFavorite: (id: string) => void;
   onClose: () => void;
+  onSelectTimeframe?: (tf: Timeframe) => void;
+  onUpdateCoinChanges?: (symbol: string, changes: Partial<Record<Timeframe, number>>) => void;
 }
 
 export const CoinModal: React.FC<CoinModalProps> = ({
@@ -24,8 +26,15 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   timeframe: initialTimeframe = '1D',
   onToggleFavorite,
   onClose,
+  onSelectTimeframe,
+  onUpdateCoinChanges,
 }) => {
   const [activeTf, setActiveTf] = useState<Timeframe>(initialTimeframe);
+
+  // Synchronize modal's active timeframe whenever parent global timeframe changes
+  useEffect(() => {
+    setActiveTf(initialTimeframe);
+  }, [initialTimeframe]);
   const [hoveredPoint, setHoveredPoint] = useState<{ index: number; price: number } | null>(null);
   const [historyPoints, setHistoryPoints] = useState<number[] | null>(null);
   const [isLoadingChart, setIsLoadingChart] = useState(false);
@@ -212,6 +221,9 @@ export const CoinModal: React.FC<CoinModalProps> = ({
           }
         }
         setDynamicChanges((prev) => ({ ...prev, ...newChanges }));
+        if (onUpdateCoinChanges) {
+          onUpdateCoinChanges(coin.symbol, newChanges);
+        }
       }
     };
 
@@ -220,7 +232,7 @@ export const CoinModal: React.FC<CoinModalProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [coin.symbol, coin.price]);
+  }, [coin.symbol, coin.price, onUpdateCoinChanges]);
 
   // Dynamic sparkline points with real Yahoo data or realistic market wave curve
   const chartPoints = useMemo(() => {
@@ -699,7 +711,12 @@ export const CoinModal: React.FC<CoinModalProps> = ({
                 return (
                   <button 
                     key={label}
-                    onClick={() => setActiveTf(key)}
+                    onClick={() => {
+                      setActiveTf(key);
+                      if (onSelectTimeframe) {
+                        onSelectTimeframe(key);
+                      }
+                    }}
                     className={`py-2 px-1 text-center transition-all cursor-pointer ${
                       isSelected 
                         ? isDark ? 'bg-white/[0.12] ring-1 ring-inset ring-white/30' : 'bg-black/[0.08] ring-1 ring-inset ring-black/15'
