@@ -34,7 +34,7 @@ const DEFAULT_PHYSICS: PhysicsSettings = {
 export default function App() {
   const [coins, setCoins] = useState<CryptoCoin[]>(() => {
     try {
-      const cached = localStorage.getItem('MarketMap_market_cache_v4');
+      const cached = localStorage.getItem('MapSaham_market_cache_v4');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length >= 50) {
@@ -273,7 +273,7 @@ export default function App() {
         if (isMounted && enriched && enriched.length > 0) {
           setCoins(enriched);
           try {
-            localStorage.setItem('MarketMap_market_cache_v4', JSON.stringify(enriched));
+            localStorage.setItem('MapSaham_market_cache_v4', JSON.stringify(enriched));
           } catch {
             // ignore
           }
@@ -442,7 +442,7 @@ export default function App() {
       <main className="relative flex-1 w-full h-full overflow-hidden">
         {/* Semantic SEO & Crawler Layer */}
         <section className="sr-only" aria-label="Saham Indonesia Live Market Heatmap Overview">
-          <h1>MarketMap - Visualisasi Interaktif &amp; Heatmap Saham IHSG IDX</h1>
+          <h1>MapSaham - Visualisasi Interaktif &amp; Heatmap Saham IHSG IDX</h1>
           <p>
             Visualisasi pasar saham Indonesia (IHSG / IDX) interaktif berbasis bubble dan apple physics. Pantau BBCA,
             BBRI, BMRI, TLKM, ASII, BBNI dan saham top bursa efek Indonesia secara real-time / delayed data dari Yahoo Finance.
@@ -475,8 +475,8 @@ export default function App() {
           {hoveredCoin && (
             <div className="absolute top-3 left-3 z-20 pointer-events-none">
               <div className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${isDark
-                  ? 'macos-window bg-[#1c1d22]/95 text-slate-100'
-                  : 'macos-window-light bg-white/95 text-slate-900'
+                ? 'macos-window bg-[#1c1d22]/95 text-slate-100'
+                : 'macos-window-light bg-white/95 text-slate-900'
                 }`}>
                 <BubbleIcon
                   symbol={hoveredCoin.symbol}
@@ -507,8 +507,8 @@ export default function App() {
           {searchQuery && (viewMode === 'bubbles' || viewMode === 'apples') && (
             <div className="absolute top-3 right-3 z-20 pointer-events-auto">
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all ${isDark
-                  ? 'macos-window bg-[#1c1d22]/95 text-slate-100'
-                  : 'macos-window-light bg-white/95 text-slate-900'
+                ? 'macos-window bg-[#1c1d22]/95 text-slate-100'
+                : 'macos-window-light bg-white/95 text-slate-900'
                 }`}>
                 <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" />
                 <span>
