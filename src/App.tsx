@@ -34,7 +34,7 @@ const DEFAULT_PHYSICS: PhysicsSettings = {
 export default function App() {
   const [coins, setCoins] = useState<CryptoCoin[]>(() => {
     try {
-      const cached = localStorage.getItem('mapsaham_market_cache_v3');
+      const cached = localStorage.getItem('mapsaham_market_cache_v4');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length >= 50) {
