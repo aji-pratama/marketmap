@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Timeframe, SizeByMetric, ContentDisplay, Currency, RankRange, ViewMode, ThemeMode
+  Timeframe, SizeByMetric, ContentDisplay, Currency, CategoryFilter, ViewMode, ThemeMode
 } from '../types/crypto';
 import {
   SlidersHorizontal, Camera, Search, RotateCcw,
   CircleDot, Table, ChevronDown, Check, X, Apple,
-  Sun, Moon, Zap, ZapOff
+  Sun, Moon, Zap, ZapOff, Clock, LayoutGrid
 } from 'lucide-react';
 import { CryptoApplesLogo } from './CryptoApplesLogo';
 
@@ -14,7 +14,7 @@ interface HeaderProps {
   sizeBy: SizeByMetric;
   contentDisplay: ContentDisplay;
   currency: Currency;
-  categoryFilter: RankRange;
+  categoryFilter: CategoryFilter;
   viewMode: ViewMode;
   searchQuery: string;
   liveSimulation: boolean;
@@ -27,7 +27,7 @@ interface HeaderProps {
   onSelectSizeBy: (metric: SizeByMetric) => void;
   onSelectContentDisplay: (content: ContentDisplay) => void;
   onSelectCurrency: (curr: Currency) => void;
-  onSelectCategoryFilter: (filter: RankRange) => void;
+  onSelectCategoryFilter: (filter: CategoryFilter) => void;
   onSelectViewMode: (mode: ViewMode) => void;
   onSearchChange: (q: string) => void;
   onToggleLiveSimulation: () => void;
@@ -67,9 +67,11 @@ export const Header: React.FC<HeaderProps> = ({
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isTfDropdownOpen, setIsTfDropdownOpen] = useState(false);
 
   const rankRef = useRef<HTMLDivElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
+  const tfDropdownRef = useRef<HTMLDivElement>(null);
 
   const isDark = theme === 'dark';
 
@@ -81,6 +83,9 @@ export const Header: React.FC<HeaderProps> = ({
       }
       if (optionsRef.current && !optionsRef.current.contains(e.target as Node)) {
         setIsOptionsOpen(false);
+      }
+      if (tfDropdownRef.current && !tfDropdownRef.current.contains(e.target as Node)) {
+        setIsTfDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -98,14 +103,30 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'Max', label: 'Max' },
   ];
 
-  const rankRanges: { id: RankRange; label: string }[] = [
+  const rankRanges: { id: CategoryFilter; label: string; badge?: string }[] = [
     { id: 'favorites', label: `⭐ Favorit Saya (${favoriteCount})` },
+    { id: '1-1000', label: '🔥 Semua Saham (168)' },
     { id: '1-100', label: 'Top 100 Saham' },
     { id: '101-200', label: 'Saham 101 - 200' },
-    { id: '1-1000', label: '🔥 Semua Saham (168)' },
   ];
 
-  const activeRankLabel = rankRanges.find((r) => r.id === categoryFilter)?.label || 'Top 100';
+  const sectorFilters: { id: CategoryFilter; label: string; icon: string; count: number }[] = [
+    { id: 'financials', label: 'Keuangan (Financials)', icon: '🏦', count: 20 },
+    { id: 'energy', label: 'Energi (Energy)', icon: '⚡', count: 20 },
+    { id: 'basic-materials', label: 'Barang Baku (Basic Materials)', icon: '⛏️', count: 20 },
+    { id: 'consumer', label: 'Konsumer (Consumer)', icon: '🛒', count: 43 },
+    { id: 'technology', label: 'Teknologi (Technology)', icon: '💻', count: 19 },
+    { id: 'industrials', label: 'Perindustrian (Industrials)', icon: '🏭', count: 10 },
+    { id: 'properties', label: 'Properti & Real Estate', icon: '🏢', count: 17 },
+    { id: 'healthcare', label: 'Kesehatan (Healthcare)', icon: '🏥', count: 10 },
+    { id: 'infrastructure', label: 'Infrastruktur & Telko', icon: '📡', count: 9 },
+  ];
+
+  const activeSector = sectorFilters.find((s) => s.id === categoryFilter);
+  const activeRank = rankRanges.find((r) => r.id === categoryFilter);
+  const activeRankLabel = activeSector 
+    ? `${activeSector.icon} ${activeSector.label.split(' ')[0]}` 
+    : activeRank?.label || 'Top 100';
 
   const sizeByLabels: Record<SizeByMetric, string> = {
     performance: 'Performance %',
@@ -197,71 +218,93 @@ export const Header: React.FC<HeaderProps> = ({
         : 'macos-titlebar-light text-slate-900 border-black/[0.1] bg-white/95 backdrop-blur-md'
       }`}>
       {/* Top Header Row - Responsive Mac OS Toolbar */}
-      <div className="flex items-center justify-between gap-2 sm:gap-3 lg:gap-4 px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full">
-        {/* Left Section: Brand & Filter Selection (Traffic lights removed per request) */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Official CryptoApples Brand Logo */}
-          <div className="mr-1">
+      <div className="flex items-center justify-between gap-1.5 sm:gap-2 lg:gap-3 px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full">
+        {/* Left Section: Brand & Filter Selection */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Brand Logo */}
+          <div className="mr-0.5">
             <CryptoApplesLogo size={32} />
           </div>
 
-          {/* Rank Range Dropdown - Substantial Mac Button */}
+          {/* Sektoral & Rank Selection Dropdown */}
           <div className="relative" ref={rankRef}>
             <button
               onClick={() => {
                 setIsRankOpen(!isRankOpen);
                 setIsOptionsOpen(false);
+                setIsTfDropdownOpen(false);
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-2xs ${isDark ? 'macos-btn-dark text-slate-200 hover:text-white' : 'macos-btn-light text-slate-800'
+              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-2xs ${isDark ? 'macos-btn-dark text-slate-200 hover:text-white' : 'macos-btn-light text-slate-800'
                 }`}
             >
-              <span className="max-w-[85px] sm:max-w-none truncate">{activeRankLabel}</span>
+              <span className="max-w-[95px] sm:max-w-[130px] lg:max-w-none truncate">{activeRankLabel}</span>
               <ChevronDown className={`w-3.5 h-3.5 shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
             </button>
 
             {isRankOpen && (
               <div
-                className={`absolute left-0 mt-2 w-48 rounded-xl p-1.5 z-50 max-h-72 overflow-y-auto shadow-2xl transition-colors border ${isDark
+                className={`absolute left-0 mt-2 w-56 rounded-xl p-1.5 z-50 max-h-80 overflow-y-auto shadow-2xl transition-colors border ${isDark
                     ? 'macos-window bg-[#22242e] text-slate-200 border-white/[0.14]'
                     : 'macos-window-light bg-white text-slate-800 border-black/[0.1]'
                   }`}
                 onClick={() => setIsRankOpen(false)}
               >
                 <div className={`px-2.5 py-1 text-[10px] font-mono uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Select Rank
+                  Peringkat / Filter Utama
                 </div>
                 {rankRanges.map((range) => (
-                  <React.Fragment key={range.id}>
-                    <button
-                      onClick={() => onSelectCategoryFilter(range.id)}
-                      className={`w-full px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between transition-colors ${categoryFilter === range.id
-                          ? isDark ? 'text-amber-400 font-bold bg-amber-950/50' : 'text-amber-800 font-bold bg-amber-50'
-                          : isDark ? 'text-slate-300 hover:bg-white/[0.08]' : 'text-slate-700 hover:bg-slate-100'
-                        }`}
-                    >
-                      <span className={range.id === 'favorites' ? 'font-bold text-amber-400' : 'font-medium'}>{range.label}</span>
-                      {categoryFilter === range.id && <Check className="w-3.5 h-3.5 text-amber-500 font-bold" />}
-                    </button>
-                    {range.id === 'favorites' && (
-                      <div className={`my-1 h-[1px] ${isDark ? 'bg-white/[0.1]' : 'bg-slate-200'}`} />
-                    )}
-                  </React.Fragment>
+                  <button
+                    key={range.id}
+                    onClick={() => onSelectCategoryFilter(range.id)}
+                    className={`w-full px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between transition-colors ${categoryFilter === range.id
+                        ? isDark ? 'text-amber-400 font-bold bg-amber-950/50' : 'text-amber-800 font-bold bg-amber-50'
+                        : isDark ? 'text-slate-300 hover:bg-white/[0.08]' : 'text-slate-700 hover:bg-slate-100'
+                      }`}
+                  >
+                    <span className={range.id === 'favorites' ? 'font-bold text-amber-400' : 'font-medium'}>{range.label}</span>
+                    {categoryFilter === range.id && <Check className="w-3.5 h-3.5 text-amber-500 font-bold" />}
+                  </button>
+                ))}
+
+                <div className={`my-1.5 h-[1px] ${isDark ? 'bg-white/[0.1]' : 'bg-slate-200'}`} />
+
+                <div className={`px-2.5 py-1 text-[10px] font-mono uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Filter Sektoral IHSG
+                </div>
+                {sectorFilters.map((sector) => (
+                  <button
+                    key={sector.id}
+                    onClick={() => onSelectCategoryFilter(sector.id)}
+                    className={`w-full px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between transition-colors ${categoryFilter === sector.id
+                        ? isDark ? 'text-emerald-400 font-bold bg-emerald-950/50' : 'text-emerald-700 font-bold bg-emerald-50'
+                        : isDark ? 'text-slate-300 hover:bg-white/[0.08]' : 'text-slate-700 hover:bg-slate-100'
+                      }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <span>{sector.icon}</span>
+                      <span className="font-medium truncate">{sector.label}</span>
+                    </div>
+                    <div className="flex items-center gap-1 font-mono text-[11px] opacity-75 shrink-0 ml-1">
+                      <span>({sector.count})</span>
+                      {categoryFilter === sector.id && <Check className="w-3.5 h-3.5 text-emerald-500 font-bold" />}
+                    </div>
+                  </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Dedicated "My Favorites" Filter Button - Bold & Tactile */}
+          {/* Dedicated "My Favorites" Filter Button */}
           <button
             onClick={() => {
               if (categoryFilter === 'favorites') {
-                onSelectCategoryFilter('1-100');
+                onSelectCategoryFilter('1-1000');
               } else {
                 onSelectCategoryFilter('favorites');
               }
             }}
-            title={categoryFilter === 'favorites' ? 'Showing Favorites (Click to show Top 100)' : 'Filter by My Favorites (⭐)'}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs ${categoryFilter === 'favorites'
+            title={categoryFilter === 'favorites' ? 'Showing Favorites (Click to show All)' : 'Filter by My Favorites (⭐)'}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs ${categoryFilter === 'favorites'
                 ? isDark
                   ? 'macos-btn-dark ring-2 ring-amber-400/80 text-amber-300 bg-amber-950/60 shadow-xs'
                   : 'macos-btn-light ring-2 ring-amber-500/80 text-amber-950 bg-amber-100 shadow-xs'
@@ -271,8 +314,8 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
           >
             <span className="text-amber-400 text-sm">★</span>
-            <span className="hidden sm:inline">Favorites</span>
-            <span className={`font-mono text-xs px-2 py-0.5 rounded-full font-bold ${categoryFilter === 'favorites'
+            <span className="hidden xl:inline">Favs</span>
+            <span className={`font-mono text-xs px-1.5 py-0.2 rounded-full font-bold ${categoryFilter === 'favorites'
                 ? isDark ? 'bg-amber-400/30 text-amber-300' : 'bg-amber-300 text-amber-950'
                 : isDark ? 'bg-white/10 text-slate-300' : 'bg-black/5 text-slate-700'
               }`}>
@@ -284,58 +327,109 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onRefreshPrices}
             title={isLiveConnected ? "Real-time feed connected. Click to refresh." : "Connecting to market feed..."}
-            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all shadow-2xs ${isDark ? 'macos-btn-dark' : 'macos-btn-light'
+            className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all shadow-2xs ${isDark ? 'macos-btn-dark' : 'macos-btn-light'
               }`}
           >
             <span className={`w-2 h-2 rounded-full shrink-0 ${isLiveConnected ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-amber-400'}`} />
-            <span className={isLiveConnected ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+            <span className={`hidden sm:inline ${isLiveConnected ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}`}>
               {isLiveConnected ? 'LIVE' : 'SYNC'}
             </span>
-            <RotateCcw className={`w-3.5 h-3.5 opacity-60 hover:opacity-100 ml-0.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`w-3.5 h-3.5 opacity-60 hover:opacity-100 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
-        {/* Center: Desktop Timeframe Segmented Control (Mac Inset, Thicker) */}
-        <div className={`hidden md:flex items-center p-1 rounded-xl gap-0.5 border ${isDark
-            ? 'macos-inset-dark border-white/[0.08]'
-            : 'macos-inset-light border-black/[0.06]'
-          }`}>
-          {timeframes.map((tf) => {
-            const active = timeframe === tf.id;
-            return (
-              <button
-                key={tf.id}
-                onClick={() => onSelectTimeframe(tf.id)}
-                className={`px-3 py-1.5 text-xs rounded-lg transition-all font-mono font-bold ${active
-                    ? isDark
-                      ? 'macos-btn-dark text-white shadow-xs'
-                      : 'macos-btn-light text-slate-900 shadow-xs'
-                    : isDark
-                      ? 'text-slate-400 hover:text-slate-200'
-                      : 'text-slate-600 hover:text-slate-900'
+        {/* Center: Desktop Timeframe Controls */}
+        {/* Full Segmented Buttons on wider screens (xl+), Compact Select Dropdown on medium screens (md to lg) */}
+        <div className="flex items-center justify-center">
+          {/* 1. Full Segmented Buttons (>= xl) */}
+          <div className={`hidden xl:flex items-center p-1 rounded-xl gap-0.5 border ${isDark
+              ? 'macos-inset-dark border-white/[0.08]'
+              : 'macos-inset-light border-black/[0.06]'
+            }`}>
+            {timeframes.map((tf) => {
+              const active = timeframe === tf.id;
+              return (
+                <button
+                  key={tf.id}
+                  onClick={() => onSelectTimeframe(tf.id)}
+                  className={`px-2.5 lg:px-3 py-1.5 text-xs rounded-lg transition-all font-mono font-bold ${active
+                      ? isDark
+                        ? 'macos-btn-dark text-white shadow-xs'
+                        : 'macos-btn-light text-slate-900 shadow-xs'
+                      : isDark
+                        ? 'text-slate-400 hover:text-slate-200'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                >
+                  {tf.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 2. Compact Dropdown Select on medium screens (md to lg) */}
+          <div className="relative xl:hidden" ref={tfDropdownRef}>
+            <button
+              onClick={() => {
+                setIsTfDropdownOpen(!isTfDropdownOpen);
+                setIsRankOpen(false);
+                setIsOptionsOpen(false);
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all shadow-2xs ${isDark ? 'macos-btn-dark text-slate-200' : 'macos-btn-light text-slate-800'
+                }`}
+            >
+              <Clock className="w-3.5 h-3.5 text-cyan-400" />
+              <span>TF:</span>
+              <span className="text-cyan-400">{timeframe}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+            {isTfDropdownOpen && (
+              <div
+                className={`absolute left-1/2 -translate-x-1/2 mt-2 w-32 rounded-xl p-1 z-50 shadow-2xl transition-colors border ${isDark
+                    ? 'macos-window bg-[#22242e] text-slate-200 border-white/[0.14]'
+                    : 'macos-window-light bg-white text-slate-800 border-black/[0.1]'
                   }`}
+                onClick={() => setIsTfDropdownOpen(false)}
               >
-                {tf.label}
-              </button>
-            );
-          })}
+                <div className={`px-2 py-1 text-[10px] font-mono uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Timeframe
+                </div>
+                {timeframes.map((tf) => (
+                  <button
+                    key={tf.id}
+                    onClick={() => onSelectTimeframe(tf.id)}
+                    className={`w-full px-2 py-1.5 rounded-lg text-left font-mono text-xs flex items-center justify-between transition-colors ${timeframe === tf.id
+                        ? isDark ? 'text-cyan-400 font-bold bg-cyan-950/50' : 'text-cyan-700 font-bold bg-cyan-50'
+                        : isDark ? 'text-slate-300 hover:bg-white/[0.08]' : 'text-slate-700 hover:bg-slate-100'
+                      }`}
+                  >
+                    <span>{tf.label}</span>
+                    {timeframe === tf.id && <Check className="w-3.5 h-3.5 text-cyan-400 font-bold" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Section: Controls, Search, View Switcher & Actions */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Options Dropdown Button */}
+        <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-2.5 shrink-0">
+          {/* Options Dropdown Button (Size, Content, Currency) */}
           <div className="relative hidden md:block" ref={optionsRef}>
             <button
               onClick={() => {
                 setIsOptionsOpen(!isOptionsOpen);
                 setIsRankOpen(false);
+                setIsTfDropdownOpen(false);
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-2xs ${isDark ? 'macos-btn-dark text-slate-200 hover:text-white' : 'macos-btn-light text-slate-800'
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-2xs ${isDark ? 'macos-btn-dark text-slate-200 hover:text-white' : 'macos-btn-light text-slate-800'
                 }`}
             >
-              <span className={`hidden lg:inline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Size:</span>
-              <span>{sizeByLabels[sizeBy]}</span>
-              <span className="font-mono text-xs text-emerald-500 font-bold">({currency})</span>
+              <LayoutGrid className="w-3.5 h-3.5 text-emerald-400" />
+              <span className={`hidden 2xl:inline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Display:</span>
+              <span className="truncate max-w-[85px] lg:max-w-none">{sizeByLabels[sizeBy].split(' ')[0]}</span>
+              <span className="font-mono text-xs text-emerald-400 font-bold">({currency})</span>
               <ChevronDown className={`w-3.5 h-3.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
             </button>
 

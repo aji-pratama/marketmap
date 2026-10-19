@@ -20,15 +20,7 @@ export type RankRange =
   | '901-1000' 
   | 'favorites';
 
-export type CategoryFilter = RankRange;
-
-export type ColorMode = 'classic' | 'colorblind' | 'neon' | 'monochrome';
-
-export type ViewMode = 'bubbles' | 'apples' | 'table';
-
-export type ThemeMode = 'dark' | 'light';
-
-export type SahamCategory = 
+export type SectorFilter = 
   | 'financials' 
   | 'energy' 
   | 'basic-materials' 
@@ -38,6 +30,16 @@ export type SahamCategory =
   | 'properties' 
   | 'healthcare' 
   | 'infrastructure';
+
+export type CategoryFilter = RankRange | SectorFilter;
+
+export type ColorMode = 'classic' | 'colorblind' | 'neon' | 'monochrome';
+
+export type ViewMode = 'bubbles' | 'apples' | 'table';
+
+export type ThemeMode = 'dark' | 'light';
+
+export type SahamCategory = SectorFilter;
 
 export interface CryptoCoin {
   id: string;

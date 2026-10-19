@@ -156,6 +156,23 @@ export default function App() {
       return result.slice(0, 1000);
     }
 
+    // Sektoral filters
+    const validSectors = [
+      'financials',
+      'energy',
+      'basic-materials',
+      'consumer',
+      'technology',
+      'industrials',
+      'properties',
+      'healthcare',
+      'infrastructure',
+    ];
+
+    if (validSectors.includes(categoryFilter)) {
+      return result.filter((c) => c.category === categoryFilter);
+    }
+
     // Rank Range filter (100 coins per page up to 1000)
     switch (categoryFilter) {
       case '1-100':
