@@ -43,10 +43,13 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
   const windowRef = useRef<HTMLDivElement | null>(null);
 
+  // Store dynamically calculated changes from historical chart
+  const [dynamicChanges, setDynamicChanges] = useState<Partial<Record<Timeframe, number>>>({});
+
   const isDark = theme === 'dark';
   
-  // Active timeframe calculations
-  const activeTfChange = coin.changes[activeTf] ?? (coin.changes['1D'] || coin.changes['24h'] || 0);
+  // Active timeframe calculations (prioritize dynamically calculated return from real chart)
+  const activeTfChange = dynamicChanges[activeTf] ?? coin.changes[activeTf] ?? (coin.changes['1D'] || coin.changes['24h'] || 0);
   const isActiveTfGain = activeTfChange >= 0;
 
   // 24h Low/High progress
@@ -56,14 +59,14 @@ export const CoinModal: React.FC<CoinModalProps> = ({
   const currentPos = Math.max(0, Math.min(100, ((coin.price - low) / range) * 100));
 
   const timeframes: { label: string; key: Timeframe; val: number }[] = [
-    { label: '1D', key: '1D', val: coin.changes['1D'] ?? coin.changes['24h'] ?? 0 },
-    { label: '5D', key: '5D', val: coin.changes['5D'] ?? coin.changes['7d'] ?? 0 },
-    { label: '1M', key: '1M', val: coin.changes['1M'] ?? coin.changes['30d'] ?? 0 },
-    { label: '6M', key: '6M', val: coin.changes['6M'] ?? 0 },
-    { label: 'YTD', key: 'YTD', val: coin.changes['YTD'] ?? 0 },
-    { label: '1Y', key: '1Y', val: coin.changes['1Y'] ?? coin.changes['1y'] ?? 0 },
-    { label: '5Y', key: '5Y', val: coin.changes['5Y'] ?? 0 },
-    { label: 'Max', key: 'Max', val: coin.changes['Max'] ?? 0 },
+    { label: '1D', key: '1D', val: dynamicChanges['1D'] ?? coin.changes['1D'] ?? coin.changes['24h'] ?? 0 },
+    { label: '5D', key: '5D', val: dynamicChanges['5D'] ?? coin.changes['5D'] ?? coin.changes['7d'] ?? 0 },
+    { label: '1M', key: '1M', val: dynamicChanges['1M'] ?? coin.changes['1M'] ?? coin.changes['30d'] ?? 0 },
+    { label: '6M', key: '6M', val: dynamicChanges['6M'] ?? coin.changes['6M'] ?? 0 },
+    { label: 'YTD', key: 'YTD', val: dynamicChanges['YTD'] ?? coin.changes['YTD'] ?? 0 },
+    { label: '1Y', key: '1Y', val: dynamicChanges['1Y'] ?? coin.changes['1Y'] ?? coin.changes['1y'] ?? 0 },
+    { label: '5Y', key: '5Y', val: dynamicChanges['5Y'] ?? coin.changes['5Y'] ?? 0 },
+    { label: 'Max', key: 'Max', val: dynamicChanges['Max'] ?? coin.changes['Max'] ?? 0 },
   ];
 
   const tfTitleMap: Record<Timeframe, string> = {
@@ -77,55 +80,66 @@ export const CoinModal: React.FC<CoinModalProps> = ({
     'Max': 'Tren Harga Sepanjang Masa (Max)',
   };
 
-  // Fetch real historical chart from Yahoo Finance when active timeframe or symbol changes
+  // Fetch real historical chart from Yahoo Finance for active timeframe and populate timeframe returns
   useEffect(() => {
     let isCancelled = false;
-    const fetchHistory = async () => {
-      setIsLoadingChart(true);
-      const symbol = coin.symbol.endsWith('.JK') ? coin.symbol : `${coin.symbol}.JK`;
-      let range = '1d';
-      let interval = '5m';
+    const symbol = coin.symbol.endsWith('.JK') ? coin.symbol : `${coin.symbol}.JK`;
 
-      if (activeTf === '1D') {
-        range = '1d';
-        interval = '5m';
-      } else if (activeTf === '5D') {
-        range = '5d';
-        interval = '15m';
-      } else if (activeTf === '1M') {
-        range = '1mo';
-        interval = '1d';
-      } else if (activeTf === '6M') {
-        range = '6mo';
-        interval = '1d';
-      } else if (activeTf === 'YTD') {
-        range = 'ytd';
-        interval = '1d';
-      } else if (activeTf === '1Y') {
-        range = '1y';
-        interval = '1d';
-      } else if (activeTf === '5Y') {
-        range = '5y';
-        interval = '1wk';
-      } else if (activeTf === 'Max') {
-        range = 'max';
-        interval = '1mo';
-      }
+    // 1. Fetch active timeframe chart data for rendering the main chart line
+    const fetchActiveChart = async () => {
+      setIsLoadingChart(true);
+      const tfConfigs: Record<Timeframe, { range: string; interval: string }> = {
+        '1D': { range: '1d', interval: '5m' },
+        '5D': { range: '5d', interval: '15m' },
+        '1M': { range: '1mo', interval: '1d' },
+        '6M': { range: '6mo', interval: '1d' },
+        'YTD': { range: 'ytd', interval: '1d' },
+        '1Y': { range: '1y', interval: '1d' },
+        '5Y': { range: '5y', interval: '1wk' },
+        'Max': { range: 'max', interval: '1mo' },
+      };
+
+      const cfg = tfConfigs[activeTf] || { range: '1mo', interval: '1d' };
 
       try {
-        const res = await fetch(`/api/yahoo/chart/${symbol}?range=${range}&interval=${interval}`);
+        const res = await fetch(`/api/yahoo/chart/${symbol}?range=${cfg.range}&interval=${cfg.interval}`);
         if (res.ok) {
           const data = await res.json();
-          const quotes = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
-          const valid = quotes.filter((p: any) => typeof p === 'number' && !isNaN(p));
-          if (!isCancelled && valid.length >= 2) {
-            setHistoryPoints(valid);
+          const meta = data.chart?.result?.[0]?.meta;
+          const quotes: (number | null)[] = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+          const valid = quotes.filter((p): p is number => typeof p === 'number' && !isNaN(p));
+
+          if (!isCancelled) {
+            if (activeTf === '1D') {
+              // For 1D, start price is chartPreviousClose from previous day close
+              const prevClose = meta?.chartPreviousClose ?? coin.price;
+              const currentP = meta?.regularMarketPrice ?? (valid.length > 0 ? valid[valid.length - 1] : coin.price);
+              const pointsFor1D = [prevClose, ...valid];
+              setHistoryPoints(pointsFor1D.length >= 2 ? pointsFor1D : [prevClose, currentP]);
+
+              const change1D = meta?.regularMarketChangePercent != null
+                ? Number(meta.regularMarketChangePercent.toFixed(2))
+                : Number((((currentP - prevClose) / prevClose) * 100).toFixed(2));
+
+              setDynamicChanges((prev) => ({ ...prev, '1D': change1D }));
+            } else if (valid.length >= 2) {
+              setHistoryPoints(valid);
+              const firstP = valid[0];
+              const lastP = valid[valid.length - 1];
+              if (firstP > 0) {
+                const calculatedChange = Number((((lastP - firstP) / firstP) * 100).toFixed(2));
+                setDynamicChanges((prev) => ({
+                  ...prev,
+                  [activeTf]: calculatedChange,
+                }));
+              }
+            }
             setIsLoadingChart(false);
             return;
           }
         }
       } catch {
-        // fallback to smooth synthetic curve
+        // fallback
       }
 
       if (!isCancelled) {
@@ -134,11 +148,79 @@ export const CoinModal: React.FC<CoinModalProps> = ({
       }
     };
 
-    fetchHistory();
+    fetchActiveChart();
+
     return () => {
       isCancelled = true;
     };
-  }, [coin.symbol, activeTf]);
+  }, [coin.symbol, activeTf, coin.price]);
+
+  // Preload/refresh all timeframe return percentages so buttons accurately match Google Finance
+  useEffect(() => {
+    let isCancelled = false;
+    const symbol = coin.symbol.endsWith('.JK') ? coin.symbol : `${coin.symbol}.JK`;
+
+    const fetchAllTfChanges = async () => {
+      const tfRequests: { key: Timeframe; range: string; interval: string }[] = [
+        { key: '1D', range: '1d', interval: '5m' },
+        { key: '5D', range: '5d', interval: '15m' },
+        { key: '1M', range: '1mo', interval: '1d' },
+        { key: '6M', range: '6mo', interval: '1d' },
+        { key: 'YTD', range: 'ytd', interval: '1d' },
+        { key: '1Y', range: '1y', interval: '1d' },
+        { key: '5Y', range: '5y', interval: '1wk' },
+        { key: 'Max', range: 'max', interval: '1mo' },
+      ];
+
+      // Fetch key timeframes in parallel
+      const results = await Promise.allSettled(
+        tfRequests.map(async ({ key, range, interval }) => {
+          const res = await fetch(`/api/yahoo/chart/${symbol}?range=${range}&interval=${interval}`);
+          if (!res.ok) return null;
+          const data = await res.json();
+          const meta = data.chart?.result?.[0]?.meta;
+          const quotes: (number | null)[] = data.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+          const valid = quotes.filter((p): p is number => typeof p === 'number' && !isNaN(p));
+
+          if (key === '1D') {
+            if (meta?.regularMarketChangePercent != null) {
+              return { key, change: Number(meta.regularMarketChangePercent.toFixed(2)) };
+            }
+            const prevClose = meta?.chartPreviousClose;
+            const curP = meta?.regularMarketPrice ?? coin.price;
+            if (prevClose && prevClose > 0) {
+              return { key, change: Number((((curP - prevClose) / prevClose) * 100).toFixed(2)) };
+            }
+          }
+
+          if (valid.length >= 2) {
+            const firstP = valid[0];
+            const lastP = valid[valid.length - 1];
+            if (firstP > 0) {
+              return { key, change: Number((((lastP - firstP) / firstP) * 100).toFixed(2)) };
+            }
+          }
+          return null;
+        })
+      );
+
+      if (!isCancelled) {
+        const newChanges: Partial<Record<Timeframe, number>> = {};
+        for (const res of results) {
+          if (res.status === 'fulfilled' && res.value) {
+            newChanges[res.value.key] = res.value.change;
+          }
+        }
+        setDynamicChanges((prev) => ({ ...prev, ...newChanges }));
+      }
+    };
+
+    fetchAllTfChanges();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [coin.symbol, coin.price]);
 
   // Dynamic sparkline points with real Yahoo data or realistic market wave curve
   const chartPoints = useMemo(() => {
@@ -508,37 +590,55 @@ export const CoinModal: React.FC<CoinModalProps> = ({
               )}
             </div>
 
-            <div className={`w-full h-28 rounded-lg p-2.5 relative flex items-center justify-center ${
-              isDark ? 'macos-inset-dark' : 'macos-inset-light'
-            }`}>
-              <svg className="w-full h-full overflow-visible" viewBox="0 0 300 80" preserveAspectRatio="none">
+            <div 
+              className={`w-full h-28 rounded-lg p-2.5 relative flex items-center justify-center select-none ${
+                isDark ? 'macos-inset-dark' : 'macos-inset-light'
+              }`}
+              onMouseLeave={() => setHoveredPoint(null)}
+            >
+              <svg 
+                className="w-full h-full overflow-visible" 
+                viewBox="0 0 300 80" 
+                preserveAspectRatio="none"
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  if (rect.width <= 0 || chartPoints.length < 2) return;
+                  const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                  const idx = Math.min(chartPoints.length - 1, Math.max(0, Math.round(relX * (chartPoints.length - 1))));
+                  setHoveredPoint({ index: idx, price: chartPoints[idx] });
+                }}
+              >
                 <defs>
                   <linearGradient id={`grad-${coin.id}-${activeTf}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={isActiveTfGain ? '#22c55e' : '#f43f5e'} stopOpacity="0.35" />
+                    <stop offset="0%" stopColor={isActiveTfGain ? '#22c55e' : '#f43f5e'} stopOpacity="0.32" />
                     <stop offset="100%" stopColor={isActiveTfGain ? '#22c55e' : '#f43f5e'} stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
 
                 {(() => {
-                  const pts = chartPoints.map((val, idx) => ({
-                    x: (idx / (chartPoints.length - 1)) * 300,
-                    price: val,
-                  }));
-                  const minP = Math.min(...chartPoints);
-                  const maxP = Math.max(...chartPoints);
+                  if (chartPoints.length < 2) return null;
+                  const rawMin = Math.min(...chartPoints);
+                  const rawMax = Math.max(...chartPoints);
+                  // Add subtle vertical padding so flat or tight lines don't clamp to edges
+                  const span = rawMax - rawMin;
+                  const pad = span > 0 ? span * 0.08 : rawMax * 0.02 || 1;
+                  const minP = rawMin - pad;
+                  const maxP = rawMax + pad;
                   const pRange = maxP - minP || 1;
 
-                  const mapped = pts.map((p) => ({
-                    x: p.x,
-                    y: 70 - ((p.price - minP) / pRange) * 60,
-                    price: p.price,
+                  const mapped = chartPoints.map((val, idx) => ({
+                    x: (idx / (chartPoints.length - 1)) * 300,
+                    y: 72 - ((val - minP) / pRange) * 64,
+                    price: val,
                   }));
 
                   const dPath = mapped.reduce(
-                    (acc, p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), 
+                    (acc, p, idx) => (idx === 0 ? `M ${p.x.toFixed(1)} ${p.y.toFixed(1)}` : `${acc} L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`), 
                     ''
                   );
                   const areaPath = `${dPath} L 300 80 L 0 80 Z`;
+
+                  const activeHover = hoveredPoint ? mapped[Math.min(mapped.length - 1, Math.max(0, hoveredPoint.index))] : null;
 
                   return (
                     <>
@@ -547,23 +647,33 @@ export const CoinModal: React.FC<CoinModalProps> = ({
                         d={dPath} 
                         fill="none" 
                         stroke={isActiveTfGain ? '#22c55e' : '#f43f5e'} 
-                        strokeWidth="2" 
+                        strokeWidth="2.2" 
                         strokeLinecap="round" 
                         strokeLinejoin="round" 
                       />
-                      {mapped.map((pt, i) => (
-                        <circle
-                          key={i}
-                          cx={pt.x}
-                          cy={pt.y}
-                          r={hoveredPoint?.index === i ? 4.5 : 1.8}
-                          className={`cursor-pointer transition-all ${
-                            isDark ? 'fill-white stroke-slate-900' : 'fill-slate-900 stroke-white'
-                          } stroke-1`}
-                          onMouseEnter={() => setHoveredPoint({ index: i, price: pt.price })}
-                          onMouseLeave={() => setHoveredPoint(null)}
-                        />
-                      ))}
+
+                      {/* Clean Hover Guideline & Point Dot (No messy 100+ circles) */}
+                      {activeHover && (
+                        <g className="pointer-events-none">
+                          <line
+                            x1={activeHover.x}
+                            y1={0}
+                            x2={activeHover.x}
+                            y2={80}
+                            stroke={isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'}
+                            strokeWidth="1"
+                            strokeDasharray="2 2"
+                          />
+                          <circle
+                            cx={activeHover.x}
+                            cy={activeHover.y}
+                            r={4.5}
+                            fill={isActiveTfGain ? '#22c55e' : '#f43f5e'}
+                            stroke={isDark ? '#0f172a' : '#ffffff'}
+                            strokeWidth="2"
+                          />
+                        </g>
+                      )}
                     </>
                   );
                 })()}

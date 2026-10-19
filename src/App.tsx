@@ -273,7 +273,7 @@ export default function App() {
         if (isMounted && enriched && enriched.length > 0) {
           setCoins(enriched);
           try {
-            localStorage.setItem('mapsaham_market_cache_v3', JSON.stringify(enriched));
+            localStorage.setItem('mapsaham_market_cache_v4', JSON.stringify(enriched));
           } catch {
             // ignore
           }
