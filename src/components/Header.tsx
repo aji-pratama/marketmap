@@ -104,28 +104,28 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   const rankRanges: { id: CategoryFilter; label: string; badge?: string }[] = [
-    { id: 'favorites', label: `⭐ Favorit Saya (${favoriteCount})` },
-    { id: '1-1000', label: '🔥 Semua Saham (168)' },
+    { id: 'favorites', label: `Favorit Saya (${favoriteCount})` },
+    { id: '1-1000', label: 'Semua Saham (168)' },
     { id: '1-100', label: 'Top 100 Saham' },
     { id: '101-200', label: 'Saham 101 - 200' },
   ];
 
-  const sectorFilters: { id: CategoryFilter; label: string; icon: string; count: number }[] = [
-    { id: 'financials', label: 'Keuangan (Financials)', icon: '🏦', count: 20 },
-    { id: 'energy', label: 'Energi (Energy)', icon: '⚡', count: 20 },
-    { id: 'basic-materials', label: 'Barang Baku (Basic Materials)', icon: '⛏️', count: 20 },
-    { id: 'consumer', label: 'Konsumer (Consumer)', icon: '🛒', count: 43 },
-    { id: 'technology', label: 'Teknologi (Technology)', icon: '💻', count: 19 },
-    { id: 'industrials', label: 'Perindustrian (Industrials)', icon: '🏭', count: 10 },
-    { id: 'properties', label: 'Properti & Real Estate', icon: '🏢', count: 17 },
-    { id: 'healthcare', label: 'Kesehatan (Healthcare)', icon: '🏥', count: 10 },
-    { id: 'infrastructure', label: 'Infrastruktur & Telko', icon: '📡', count: 9 },
+  const sectorFilters: { id: CategoryFilter; label: string; count: number }[] = [
+    { id: 'financials', label: 'Keuangan', count: 20 },
+    { id: 'energy', label: 'Energi', count: 20 },
+    { id: 'basic-materials', label: 'Barang Baku', count: 20 },
+    { id: 'consumer', label: 'Konsumer', count: 43 },
+    { id: 'technology', label: 'Teknologi', count: 19 },
+    { id: 'industrials', label: 'Perindustrian', count: 10 },
+    { id: 'properties', label: 'Properti', count: 17 },
+    { id: 'healthcare', label: 'Kesehatan', count: 10 },
+    { id: 'infrastructure', label: 'Infrastruktur', count: 9 },
   ];
 
   const activeSector = sectorFilters.find((s) => s.id === categoryFilter);
   const activeRank = rankRanges.find((r) => r.id === categoryFilter);
   const activeRankLabel = activeSector 
-    ? `${activeSector.icon} ${activeSector.label.split(' ')[0]}` 
+    ? activeSector.label 
     : activeRank?.label || 'Top 100';
 
   const sizeByLabels: Record<SizeByMetric, string> = {
@@ -269,7 +269,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className={`my-1.5 h-[1px] ${isDark ? 'bg-white/[0.1]' : 'bg-slate-200'}`} />
 
                 <div className={`px-2.5 py-1 text-[10px] font-mono uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Filter Sektoral IHSG
+                  Sektor IHSG
                 </div>
                 {sectorFilters.map((sector) => (
                   <button
@@ -280,10 +280,7 @@ export const Header: React.FC<HeaderProps> = ({
                         : isDark ? 'text-slate-300 hover:bg-white/[0.08]' : 'text-slate-700 hover:bg-slate-100'
                       }`}
                   >
-                    <div className="flex items-center gap-2 truncate">
-                      <span>{sector.icon}</span>
-                      <span className="font-medium truncate">{sector.label}</span>
-                    </div>
+                    <span className="font-medium truncate">{sector.label}</span>
                     <div className="flex items-center gap-1 font-mono text-[11px] opacity-75 shrink-0 ml-1">
                       <span>({sector.count})</span>
                       {categoryFilter === sector.id && <Check className="w-3.5 h-3.5 text-emerald-500 font-bold" />}
