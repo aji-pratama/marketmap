@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/yahoo/chart/:symbol",
+      "destination": "/api/yahoo/chart/[symbol]"
+    },
+    {
+      "source": "/api/yahoo/quotes",
+      "destination": "/api/yahoo/quotes"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
