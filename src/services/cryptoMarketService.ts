@@ -1,4 +1,4 @@
-import { CryptoCoin, LivePriceUpdate } from '../types/crypto';
+import { CryptoCoin, LivePriceUpdate, Timeframe } from '../types/crypto';
 import { INITIAL_COINS } from '../data/cryptoData';
 
 export const MARKET_SERVICE_CONFIG = {

@@ -295,7 +295,9 @@ export const TableView: React.FC<TableViewProps> = ({
                         <div className="w-16 h-5 mx-auto">
                           <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
                             {(() => {
-                              const pts = coin.sparkline;
+                              const pts = coin.sparkline && coin.sparkline.length >= 2 
+                                ? coin.sparkline 
+                                : [coin.price * 0.98, coin.price];
                               const min = Math.min(...pts);
                               const max = Math.max(...pts);
                               const rng = max - min || 1;
@@ -308,7 +310,7 @@ export const TableView: React.FC<TableViewProps> = ({
                                 <path
                                   d={pathD}
                                   fill="none"
-                                  stroke={is24hUp ? '#10b981' : '#f43f5e'}
+                                  stroke={change1D >= 0 ? '#10b981' : '#f43f5e'}
                                   strokeWidth="1.5"
                                   strokeLinecap="round"
                                 />
