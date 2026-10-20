@@ -11,44 +11,62 @@ let lastFetchTime = 0;
 
 /**
  * Fetch fresh quote data for IDX stocks (.JK) from Yahoo Finance
+export interface IhsgData {
+  price: number;
+  change: number;
+  changePercent: number;
+  high: number;
+  low: number;
+  prevClose: number;
+}
+
+/**
+ * Fetch fresh quote data for IDX stocks (.JK) or index tickers (^JKSE) from Yahoo Finance
  * Uses the proxy endpoint /api/yahoo/quotes or local browser session with crumb
  */
 export async function fetchYahooQuotes(symbols: string[]): Promise<Map<string, LivePriceUpdate>> {
   const map = new Map<string, LivePriceUpdate>();
   if (!symbols || symbols.length === 0) return map;
 
-  const jkSymbols = symbols.map((s) => (s.endsWith('.JK') ? s : `${s.toUpperCase()}.JK`));
+  const formattedSymbols = symbols.map((s) => {
+    if (s.startsWith('^')) return s;
+    return s.endsWith('.JK') ? s : `${s.toUpperCase()}.JK`;
+  });
 
   // Chunk symbols into groups of 50 to avoid URL length issues
   const chunks: string[][] = [];
-  for (let i = 0; i < jkSymbols.length; i += MARKET_SERVICE_CONFIG.symbolsChunkSize) {
-    chunks.push(jkSymbols.slice(i, i + MARKET_SERVICE_CONFIG.symbolsChunkSize));
+  for (let i = 0; i < formattedSymbols.length; i += MARKET_SERVICE_CONFIG.symbolsChunkSize) {
+    chunks.push(formattedSymbols.slice(i, i + MARKET_SERVICE_CONFIG.symbolsChunkSize));
   }
 
   for (const chunk of chunks) {
     try {
-      const url = `/api/yahoo/quotes?symbols=${chunk.join(',')}`;
+      const url = `/api/yahoo/quotes?symbols=${encodeURIComponent(chunk.join(','))}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         const results = data.quoteResponse?.result || data.quotes || [];
         if (Array.isArray(results)) {
           for (const item of results) {
-            const rawSym = (item.symbol || '').replace('.JK', '').toUpperCase();
+            const sym = (item.symbol || '').toUpperCase();
+            const rawSym = sym.replace('.JK', '');
             const price = Number(item.regularMarketPrice) || 0;
             const change = Number(item.regularMarketChangePercent) || 0;
             const high = Number(item.regularMarketDayHigh) || price;
             const low = Number(item.regularMarketDayLow) || price;
             const vol = (Number(item.regularMarketVolume) || 0) * price;
 
-            map.set(rawSym, {
+            const updateItem: LivePriceUpdate = {
               symbol: rawSym,
               price,
               change24h: Number(change.toFixed(2)),
               high24h: high,
               low24h: low,
               volume24h: vol,
-            });
+            };
+
+            map.set(rawSym, updateItem);
+            map.set(sym, updateItem);
           }
         }
       }
@@ -58,6 +76,35 @@ export async function fetchYahooQuotes(symbols: string[]): Promise<Map<string, L
   }
 
   return map;
+}
+
+/**
+ * Fetch real-time IHSG (Indeks Harga Saham Gabungan - ^JKSE) summary
+ */
+export async function fetchIhsgSummary(): Promise<IhsgData | null> {
+  try {
+    const res = await fetch(`/api/yahoo/quotes?symbols=%5EJKSE`);
+    if (res.ok) {
+      const data = await res.json();
+      const item = data.quoteResponse?.result?.[0] || data.quotes?.[0];
+      if (item) {
+        const price = Number(item.regularMarketPrice) || 0;
+        const change = Number(item.regularMarketChange) || 0;
+        const changePercent = Number(item.regularMarketChangePercent) || 0;
+        return {
+          price: Number(price.toFixed(2)),
+          change: Number(change.toFixed(2)),
+          changePercent: Number(changePercent.toFixed(2)),
+          high: Number(item.regularMarketDayHigh) || price,
+          low: Number(item.regularMarketDayLow) || price,
+          prevClose: Number(item.regularMarketPreviousClose) || price,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to fetch IHSG summary:', e);
+  }
+  return null;
 }
 
 /**

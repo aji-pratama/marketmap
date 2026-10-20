@@ -18,7 +18,9 @@ import {
   fetchAllMarketCoins,
   fetchMarketCoins,
   enrichWithBinancePrices,
-  subscribeToLiveBinanceStream
+  subscribeToLiveBinanceStream,
+  fetchIhsgSummary,
+  IhsgData
 } from './services/cryptoMarketService';
 
 const DEFAULT_PHYSICS: PhysicsSettings = {
@@ -107,13 +109,21 @@ export default function App() {
     }
   }, [theme]);
 
-  // Favorites stored in localStorage
+  // Favorites stored in localStorage (use real IDX stock IDs: bbca, bbri, bmri, tlkm)
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('cb_favorites');
-      return saved ? JSON.parse(saved) : ['bitcoin', 'ethereum', 'solana', 'injective'];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // If previous storage contained crypto assets like 'bitcoin', migrate to default IDX stocks
+          const hasOldCrypto = parsed.some((p: string) => ['bitcoin', 'ethereum', 'solana', 'injective'].includes(p.toLowerCase()));
+          if (!hasOldCrypto) return parsed;
+        }
+      }
+      return ['bbca', 'bbri', 'bmri', 'tlkm'];
     } catch {
-      return ['bitcoin', 'ethereum', 'solana', 'injective'];
+      return ['bbca', 'bbri', 'bmri', 'tlkm'];
     }
   });
 
@@ -123,14 +133,29 @@ export default function App() {
   const [screenshotSrc, setScreenshotSrc] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
+  // Real-time IHSG index data
+  const [ihsgData, setIhsgData] = useState<IhsgData | null>(null);
+
   // Canvas & Simulation references
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const simulationRef = useRef<BubbleSimulation | null>(null);
 
+  const isCoinFavorite = (coinId: string, coinSymbol?: string) => {
+    const idLower = coinId.toLowerCase();
+    const symLower = (coinSymbol || coinId).toLowerCase();
+    return favorites.some((f) => {
+      const fLower = f.toLowerCase();
+      return fLower === idLower || fLower === symLower;
+    });
+  };
+
   const handleToggleFavorite = (id: string) => {
     setFavorites((prev) => {
-      const isFav = prev.includes(id);
-      const updated = isFav ? prev.filter((f) => f !== id) : [...prev, id];
+      const targetLower = id.toLowerCase();
+      const isFav = prev.some((f) => f.toLowerCase() === targetLower);
+      const updated = isFav 
+        ? prev.filter((f) => f.toLowerCase() !== targetLower) 
+        : [...prev, targetLower];
       try {
         localStorage.setItem('cb_favorites', JSON.stringify(updated));
       } catch {
@@ -149,7 +174,7 @@ export default function App() {
 
     // Dedicated My Favorites filter
     if (categoryFilter === 'favorites') {
-      return result.filter((c) => favorites.includes(c.id));
+      return result.filter((c) => isCoinFavorite(c.id, c.symbol));
     }
 
     if (categoryFilter === '1-1000') {
@@ -285,7 +310,13 @@ export default function App() {
     const loadMarket = async () => {
       setIsRefreshing(true);
       try {
-        const allCoins = await fetchAllMarketCoins();
+        const [allCoins, ihsg] = await Promise.all([
+          fetchAllMarketCoins(),
+          fetchIhsgSummary()
+        ]);
+        if (isMounted && ihsg) {
+          setIhsgData(ihsg);
+        }
         const enriched = await enrichWithBinancePrices(allCoins);
         if (isMounted && enriched && enriched.length > 0) {
           setCoins(enriched);
@@ -601,9 +632,10 @@ export default function App() {
         )}
       </main>
 
-      {/* Running Breaking News Ticker */}
+      {/* Running Breaking News Ticker with Live IHSG Indicator */}
       <NewsTicker
         theme={theme}
+        ihsgData={ihsgData}
         onSelectCoinTicker={(symbol) => {
           const matched = coins.find((c) => c.symbol.toLowerCase() === symbol.toLowerCase());
           if (matched) {
@@ -616,6 +648,25 @@ export default function App() {
       <footer className={`w-full px-3 sm:px-5 py-1.5 flex items-center justify-between text-xs font-mono overflow-x-auto select-none z-10 transition-colors shrink-0 tabular-nums mb-14 md:mb-0 ${isDark ? 'macos-titlebar-dark text-slate-400' : 'macos-titlebar-light text-slate-600'
         }`}>
         <div className="flex items-center gap-3 sm:gap-4 whitespace-nowrap">
+          {ihsgData && (
+            <>
+              <div className="flex items-center gap-1.5 font-bold">
+                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>IHSG:</span>
+                <span className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                  {ihsgData.price.toLocaleString('id-ID')}
+                </span>
+                <span className={`px-1 py-0.2 rounded text-[10px] font-bold ${
+                  ihsgData.changePercent >= 0 
+                    ? isDark ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-700 bg-emerald-100'
+                    : isDark ? 'text-rose-400 bg-rose-500/10' : 'text-rose-700 bg-rose-100'
+                }`}>
+                  {ihsgData.changePercent >= 0 ? '+' : ''}{ihsgData.changePercent.toFixed(2)}%
+                </span>
+              </div>
+              <span className="opacity-30">·</span>
+            </>
+          )}
+
           <div className="flex items-center gap-1.5">
             <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>Assets:</span>
             <span className={`font-semibold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{filteredCoins.length}</span>
@@ -655,7 +706,7 @@ export default function App() {
         <CoinModal
           coin={selectedCoin}
           currency={currency}
-          isFavorite={favorites.includes(selectedCoin.id)}
+          isFavorite={isCoinFavorite(selectedCoin.id, selectedCoin.symbol)}
           theme={theme}
           timeframe={timeframe}
           onSelectTimeframe={(tf) => setTimeframe(tf)}

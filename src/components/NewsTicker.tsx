@@ -61,14 +61,19 @@ export const CRYPTO_NEWS_ITEMS: NewsItem[] = [
   }
 ];
 
+import { IhsgData } from '../services/cryptoMarketService';
+
 interface NewsTickerProps {
   theme?: ThemeMode;
   onSelectCoinTicker?: (symbol: string) => void;
+  ihsgData?: IhsgData | null;
 }
 
-export const NewsTicker: React.FC<NewsTickerProps> = ({ theme = 'dark', onSelectCoinTicker }) => {
+export const NewsTicker: React.FC<NewsTickerProps> = ({ theme = 'dark', onSelectCoinTicker, ihsgData }) => {
   const [activeNews, setActiveNews] = useState<NewsItem | null>(null);
   const isDark = theme === 'dark';
+
+  const isIhsgGain = (ihsgData?.changePercent ?? 0) >= 0;
 
   return (
     <>
@@ -76,14 +81,44 @@ export const NewsTicker: React.FC<NewsTickerProps> = ({ theme = 'dark', onSelect
       <div className={`relative w-full border-t select-none z-20 flex items-stretch h-8 overflow-hidden transition-colors ${
         isDark ? 'bg-[#0b0e14] border-white/[0.08]' : 'bg-slate-50 border-slate-200'
       }`}>
-        {/* News Wire Label */}
-        <div className={`flex items-center gap-1.5 px-3 shrink-0 z-10 text-[11px] font-mono font-medium ${
+        {/* IHSG Real-Time Index Indicator + News Wire Label */}
+        <div className={`flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3 shrink-0 z-10 text-[11px] font-mono font-medium ${
           isDark 
             ? 'bg-[#0f121a] border-r border-white/[0.08] text-slate-300' 
             : 'bg-slate-100 border-r border-slate-200 text-slate-700'
         }`}>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span>WIRE</span>
+          {/* IHSG Indicator */}
+          {ihsgData ? (
+            <div className="flex items-center gap-1.5 font-bold">
+              <span className={`w-1.5 h-1.5 rounded-full ${isIhsgGain ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-pulse'}`} />
+              <span className="tracking-tight text-slate-200 font-extrabold">IHSG</span>
+              <span className="tabular-nums font-mono text-[11px]">
+                {ihsgData.price.toLocaleString('id-ID')}
+              </span>
+              <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold flex items-center gap-0.5 ${
+                isIhsgGain 
+                  ? isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
+                  : isDark ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-100 text-rose-700'
+              }`}>
+                {isIhsgGain ? '▲ +' : '▼ '}{ihsgData.changePercent.toFixed(2)}%
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>WIRE</span>
+            </div>
+          )}
+
+          {ihsgData && (
+            <span className="opacity-30 select-none">|</span>
+          )}
+
+          {ihsgData && (
+            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold hidden md:inline">
+              WIRE
+            </span>
+          )}
         </div>
 
         {/* Marquee Track */}

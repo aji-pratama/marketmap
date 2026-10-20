@@ -180,7 +180,10 @@ export const TableView: React.FC<TableViewProps> = ({
               </thead>
               <tbody className="font-mono text-xs divide-y divide-white/[0.04]">
                 {sortedCoins.map((coin) => {
-                  const isFav = favorites.includes(coin.id);
+                  const isFav = favorites.some((f) => {
+                    const fLow = f.toLowerCase();
+                    return fLow === coin.id.toLowerCase() || fLow === coin.symbol.toLowerCase();
+                  });
                   const isMatch = Boolean(q && (
                     coin.symbol.toLowerCase().includes(q) || 
                     coin.name.toLowerCase().includes(q)

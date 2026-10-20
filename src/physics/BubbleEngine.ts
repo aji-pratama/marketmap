@@ -126,7 +126,9 @@ export class BubbleSimulation {
     this.currency = currency;
     this.colorMode = colorMode;
     this.physics = physics;
-    this.favorites = new Set(favorites);
+    this.favorites = new Set(
+      favorites.flatMap((f) => [f.toLowerCase(), f.toUpperCase()])
+    );
     if (theme) this.theme = theme;
     this.searchQuery = searchQuery.trim().toLowerCase();
 
@@ -1172,7 +1174,7 @@ export class BubbleSimulation {
       const b = sorted[i];
       const changeVal = b.coin.changes[this.timeframe] || 0;
       const colors = this.getColorConfig(changeVal);
-      const isFav = this.favorites.has(b.coin.id);
+      const isFav = this.favorites.has(b.coin.id.toLowerCase()) || this.favorites.has(b.coin.symbol.toUpperCase());
 
       const isSearchMatch = hasSearch && (
         b.coin.symbol.toLowerCase().includes(this.searchQuery) ||
