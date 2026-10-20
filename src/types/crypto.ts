@@ -39,6 +39,8 @@ export type ViewMode = 'bubbles' | 'apples' | 'table';
 
 export type ThemeMode = 'dark' | 'light';
 
+export type MarketType = 'idx' | 'us' | 'crypto';
+
 export type SahamCategory = SectorFilter;
 
 export interface CryptoCoin {
@@ -46,6 +48,8 @@ export interface CryptoCoin {
   name: string;
   symbol: string;
   rank: number;
+  market?: MarketType;
+
   price: number; // in IDR base
   changes: Record<string, number>;
   marketCap: number; // in IDR

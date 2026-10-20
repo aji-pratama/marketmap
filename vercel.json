@@ -9,6 +9,10 @@
       "destination": "/api/yahoo/quotes"
     },
     {
+      "source": "/api/logo",
+      "destination": "/api/logo"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

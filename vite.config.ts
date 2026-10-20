@@ -118,6 +118,78 @@ function yahooFinanceProxyPlugin(): Plugin {
           }
         }
 
+        // 3. Company Logo Endpoint: /api/logo?symbol=BBCA&market=idx|us|crypto
+        if (req.url.startsWith('/api/logo')) {
+          try {
+            const urlObj = new URL(req.url, 'http://localhost:3000');
+            const symbol = (urlObj.searchParams.get('symbol') || '').toUpperCase();
+            const market = (urlObj.searchParams.get('market') || '').toLowerCase();
+            if (!symbol) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: 'Missing symbol' }));
+              return;
+            }
+
+            const lower = symbol.toLowerCase();
+            const candidates: string[] = [];
+
+            if (market === 'crypto' || symbol.endsWith('USDT') || symbol.endsWith('USD')) {
+              const baseSym = symbol.replace(/USDT$|USD$/, '');
+              candidates.push(
+                `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${baseSym.toLowerCase()}.png`,
+                `https://bin.bnbstatic.com/static/images/common/coins/${baseSym}.png`
+              );
+            } else if (market === 'us') {
+              candidates.push(
+                `https://financialmodelingprep.com/image-stock/${symbol}.png`,
+                `https://s.yimg.com/lq/i/c/st/${lower}.png`,
+                `https://logo.clearbit.com/${lower}.com`
+              );
+            } else {
+              candidates.push(
+                `https://assets.stockbit.com/logos/companies/${symbol}.png`,
+                `https://financialmodelingprep.com/image-stock/${symbol}.png`,
+                `https://s.yimg.com/lq/i/c/st/${lower}.png`
+              );
+            }
+
+            let served = false;
+            for (const cdnUrl of candidates) {
+              try {
+                const logoRes = await fetch(cdnUrl, {
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+                    'Referer': cdnUrl.includes('stockbit') ? 'https://stockbit.com/' : 'https://finance.yahoo.com/',
+                  },
+                });
+
+                if (logoRes.ok) {
+                  const buffer = await logoRes.arrayBuffer();
+                  res.setHeader('Content-Type', logoRes.headers.get('content-type') || 'image/png');
+                  res.setHeader('Access-Control-Allow-Origin', '*');
+                  res.setHeader('Cache-Control', 'public, max-age=604800');
+                  res.end(Buffer.from(buffer));
+                  served = true;
+                  break;
+                }
+              } catch {
+                // try next
+              }
+            }
+
+            if (!served) {
+              res.statusCode = 404;
+              res.end();
+            }
+            return;
+          } catch (e: any) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: e.message }));
+            return;
+          }
+        }
+
+
         next();
       });
     },

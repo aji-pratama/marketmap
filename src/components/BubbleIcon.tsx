@@ -1,8 +1,10 @@
 import React from 'react';
 
 export interface BubbleIconProps {
-  /** The IDX stock ticker (e.g. BBCA, BBRI, BMRI, TLKM, etc.) */
+  /** The stock or coin ticker (e.g. BBCA, AAPL, BTC) */
   symbol: string;
+  /** Optional market source type ('idx' | 'us' | 'crypto') */
+  market?: MarketType;
   /** Optional custom color for background / accents */
   colorHex?: string;
   /** Dimension size in pixels or CSS units (default: 24) */
@@ -14,18 +16,42 @@ export interface BubbleIconProps {
 }
 
 /**
- * Returns candidate logo URLs for Indonesian Stock Exchange (IDX) companies
- * Prioritizes Stockbit high-res company logo CDN, with graceful fallbacks.
+ * Returns candidate logo URLs for IDX Stocks, US Equities, or Crypto
  */
-export function getStockLogoUrls(symbol: string): string[] {
+export function getAssetLogoUrls(symbol: string, market: MarketType = 'idx'): string[] {
   const sym = symbol.toUpperCase().trim();
+  const lower = sym.toLowerCase();
+
+  if (market === 'crypto' || sym.endsWith('USDT') || sym.endsWith('USD')) {
+    const baseSym = sym.replace(/USDT$|USD$/, '');
+    return [
+      `/api/logo?symbol=${sym}&market=crypto`,
+      `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${baseSym.toLowerCase()}.png`,
+      `https://bin.bnbstatic.com/static/images/common/coins/${baseSym}.png`,
+    ];
+  }
+
+  if (market === 'us') {
+    return [
+      `/api/logo?symbol=${sym}&market=us`,
+      `https://financialmodelingprep.com/image-stock/${sym}.png`,
+      `https://s.yimg.com/lq/i/c/st/${lower}.png`,
+    ];
+  }
+
+  // Default: IDX Stocks
   return [
+    `/api/logo?symbol=${sym}&market=idx`,
     `https://assets.stockbit.com/logos/companies/${sym}.png`,
+    `https://financialmodelingprep.com/image-stock/${sym}.png`,
   ];
 }
 
+// Backwards compatibility alias
+export const getStockLogoUrls = (symbol: string, market: MarketType = 'idx') => getAssetLogoUrls(symbol, market);
+
 /**
- * High-definition crisp vector SVG monogram badge generator for IDX stocks.
+ * High-definition crisp vector SVG monogram badge generator for assets.
  * Renders bold ticker typography on a brand-colored disc.
  */
 export function getDefaultMonogramSvg(sym: string, colorHex: string): string {
@@ -38,7 +64,7 @@ export function getDefaultMonogramSvg(sym: string, colorHex: string): string {
 }
 
 /**
- * Returns a high-resolution SVG Data URL for any stock symbol.
+ * Returns a high-resolution SVG Data URL for any asset symbol.
  * Used as reliable fallback when image logos fail to load.
  */
 export function getBubbleIconDataUrl(symbol: string, colorHex: string = '#00529C'): string {
@@ -50,22 +76,24 @@ export function getBubbleIconDataUrl(symbol: string, colorHex: string = '#00529C
 export const getCryptoIconSvg = getBubbleIconDataUrl;
 
 /**
- * React Component for rendering stock logos with seamless fallback to monograms.
+ * React Component for rendering stock and coin logos with seamless fallback to monograms.
  */
 export const BubbleIcon: React.FC<BubbleIconProps> = ({
   symbol,
+  market = 'idx',
   colorHex = '#00529C',
   size = 24,
   className = '',
   customIconUrl,
 }) => {
   const sym = symbol.toUpperCase().trim();
-  const primaryLogoUrl = customIconUrl || getStockLogoUrls(sym)[0];
+  const primaryLogoUrl = customIconUrl || getAssetLogoUrls(sym, market)[0];
   const [hasError, setHasError] = React.useState(false);
 
   React.useEffect(() => {
     setHasError(false);
-  }, [sym, customIconUrl]);
+  }, [sym, market, customIconUrl]);
+
 
   if (!hasError) {
     return (

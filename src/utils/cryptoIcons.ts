@@ -20,7 +20,6 @@ export function loadCryptoCanvasIcon(
   if (cached) return cached;
 
   const img = new Image();
-  img.crossOrigin = 'anonymous';
 
   const candidates: string[] = [];
   if (iconUrl && iconUrl.startsWith('http')) {
@@ -30,16 +29,28 @@ export function loadCryptoCanvasIcon(
 
   let attempt = 0;
 
-  img.onerror = () => {
-    attempt++;
-    if (attempt < candidates.length) {
-      img.src = candidates[attempt];
+  const setNextSrc = (index: number) => {
+    if (index < candidates.length) {
+      const nextUrl = candidates[index];
+      // For cross-origin external URLs, set anonymous; for same-origin (/api/logo), omit or keep anonymous
+      if (nextUrl.startsWith('http')) {
+        img.crossOrigin = 'anonymous';
+      } else {
+        img.crossOrigin = 'anonymous';
+      }
+      img.src = nextUrl;
     } else {
+      img.removeAttribute('crossorigin');
       img.src = getBubbleIconDataUrl(key, colorHex);
     }
   };
 
-  img.src = candidates[0] || getBubbleIconDataUrl(key, colorHex);
+  img.onerror = () => {
+    attempt++;
+    setNextSrc(attempt);
+  };
+
+  setNextSrc(0);
   iconImageCache.set(cacheKey, img);
   return img;
 }

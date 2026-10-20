@@ -263,10 +263,13 @@ export const CoinModal: React.FC<CoinModalProps> = ({
       url: `https://www.tradingview.com/symbols/IDX-${coin.symbol}/`,
       accent: '#2962ff',
       renderLogo: () => (
-        <svg className="w-4 h-4 shrink-0 rounded-xs" viewBox="0 0 36 28" fill="none">
-          <rect width="36" height="28" rx="4" fill="#131722" />
-          <path d="M13.5 21H7.5V7h6v14zm8-10.5h-6V7h6v3.5zm0 10.5h-6v-8.5h6v8.5zm8-15h-6V7h6v0zm0 15h-6V6h6v15z" fill="#2962FF"/>
-        </svg>
+        <div className="w-5 h-5 rounded-md bg-[#131722] flex items-center justify-center shrink-0 border border-white/10 shadow-xs overflow-hidden p-0.5">
+          <img 
+            src="/tradingview.ico" 
+            alt="TradingView" 
+            className="w-full h-full object-contain"
+          />
+        </div>
       ),
     },
     {
@@ -275,19 +278,10 @@ export const CoinModal: React.FC<CoinModalProps> = ({
       url: `https://finance.yahoo.com/quote/${coin.symbol}.JK/`,
       accent: '#6001d2',
       renderLogo: () => (
-        <div className="w-4 h-4 rounded-xs bg-[#6001d2] flex items-center justify-center text-white font-black text-[10px] leading-none shrink-0">
-          Y!
-        </div>
-      ),
-    },
-    {
-      name: 'RTI Business',
-      shortLabel: 'RTI',
-      url: `https://www.google.com/search?q=rti+business+${coin.symbol}`,
-      accent: '#10b981',
-      renderLogo: () => (
-        <div className="w-4 h-4 rounded-xs bg-emerald-600 flex items-center justify-center text-white font-bold text-[9px] leading-none shrink-0">
-          IDX
+        <div className="w-5 h-5 rounded-md bg-[#6001d2] flex items-center justify-center text-white shrink-0 shadow-xs">
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M1.5 2.5h3.6l4.4 9.2V21h3v-9.3l4.4-9.2h3.6l-6.2 12.3V21h-3v-6.2L1.5 2.5zm18.5 15a1.8 1.8 0 1 1-3.6 0 1.8 1.8 0 0 1 3.6 0z" />
+          </svg>
         </div>
       ),
     },
@@ -297,8 +291,36 @@ export const CoinModal: React.FC<CoinModalProps> = ({
       url: `https://www.google.com/finance/quote/${coin.symbol}:IDX`,
       accent: '#4285f4',
       renderLogo: () => (
-        <div className="w-4 h-4 rounded-xs bg-blue-600 flex items-center justify-center text-white font-bold text-[9px] leading-none shrink-0">
-          G
+        <div className="w-5 h-5 rounded-md bg-white flex items-center justify-center shrink-0 border border-black/10 shadow-xs">
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+            />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      name: 'RTI Business',
+      shortLabel: 'RTI',
+      url: `https://www.google.com/search?q=rti+business+${coin.symbol}`,
+      accent: '#10b981',
+      renderLogo: () => (
+        <div className="w-5 h-5 rounded-md bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white font-extrabold text-[9px] tracking-tight leading-none shrink-0 shadow-xs border border-emerald-400/20">
+          RTI
         </div>
       ),
     },
